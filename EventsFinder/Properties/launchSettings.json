@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EventsFinder": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin"
+    }
+  }
+}

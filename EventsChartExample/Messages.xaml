@@ -1,0 +1,6 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:EventsChartExample"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+    <system:String x:Key="ChartWindowHelpText">Используйте колесико мышки для изменения масштаба графика. Для навигации по данным перетащите график вправо или влево. Также доступно изменение размера графика. Для этого просто растяните или сожмите окно. Данные будут перестроены автоматически.</system:String>
+</ResourceDictionary>
