@@ -2,7 +2,7 @@
   "profiles": {
     "BenchmarkTest": {
       "commandName": "Project",
-      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin"
+      "commandLineArgs": "C:\\Projects\\eventsprocessingapi\\Data\\events.bin"
     }
   }
 }

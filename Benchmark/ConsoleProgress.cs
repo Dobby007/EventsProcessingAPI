@@ -8,7 +8,8 @@ namespace BenchmarkTest
     {
         public void Report(int value)
         {
-            Console.Write("\rDone: {0}", value);
+            if (value % 10 == 0)
+                Console.WriteLine("Done: {0}", value);
         }
     }
 }

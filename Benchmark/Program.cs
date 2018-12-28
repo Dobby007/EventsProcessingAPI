@@ -1,9 +1,16 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Columns;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Validators;
 using EventsProcessingAPI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace BenchmarkTest
@@ -19,32 +26,26 @@ namespace BenchmarkTest
                 return;
             }
 
-            DensityCalculationTest.FilePath = args[0];
-            /*var test = new DensityCalculationTest();
-            test.GlobalSetup();
-            test.CalculateDensities();*/
+            Environment.SetEnvironmentVariable(DensityCalculationTest.FilePathEnvVariable, args[0]);
 
             var summary = BenchmarkRunner.Run<DensityCalculationTest>();
-            
-            //Console.WriteLine(summary.Reports[0].ToString());
         }
     }
 
-    [SimpleJob(launchCount: 3, warmupCount: 2, targetCount: 30)]
+    [SimpleJob(launchCount: 1, warmupCount: 1)]
+    [MinColumn, MaxColumn, MeanColumn, MedianColumn]
     public class DensityCalculationTest
     {
+        public const string FilePathEnvVariable = nameof(DensityCalculationTest) + "_" + "FilePath";
+        
         public long Start { get; set; }
 
         public long End { get; set; }
-
-        [ParamsSource(nameof(PreferredSegmentSizes))]
+        
+        [Params(1, 500, 1000, 10000, 50000, 100000, 250000, 500000, 1000000, 2000000)]
         public long SegmentSize { get; set; }
 
-        public IEnumerable<long> PreferredSegmentSizes { get; set; } = new long[0];
-
         public BucketContainer BucketContainer { get; set; }
-
-        public static string FilePath { get; set; }
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -56,7 +57,8 @@ namespace BenchmarkTest
                     ProgressHandler = new ConsoleProgress()
                 };
 
-                BucketContainer = eventsApi.LoadEventsFromFileAsync(FilePath, LoadStrategyType.LoadEventsForChart)
+                var filePath = Environment.GetEnvironmentVariable(FilePathEnvVariable);
+                BucketContainer = eventsApi.LoadEventsFromFileAsync(filePath, LoadStrategyType.LoadEventsForChart)
                     .GetAwaiter()
                     .GetResult();
 
@@ -64,23 +66,24 @@ namespace BenchmarkTest
                 Start = BucketContainer.FirstTimestamp;
                 End = lastBucket?.GetAbsoluteTimeForEvent(lastBucket.GetLastEvent()) ?? 0;
 
-                PreferredSegmentSizes = BucketContainer.GetPreferredSegmentSizes(Start, End, 784);
-
             }
             catch (Exception exc)
             {
                 Console.WriteLine();
                 Console.WriteLine(exc.ToString());
             }
-}
+        }
+        
+
 
         [Benchmark]
         public void CalculateDensities()
         {
             long tStart = Start, tEnd = Math.Min(Start + SegmentSize * 2000, End);
-            //BucketContainer.GetDensities(tStart, tEnd, SegmentSize);
+            BucketContainer.GetDensities(tStart, tEnd, SegmentSize);
             
         }
     }
     
+
 }
