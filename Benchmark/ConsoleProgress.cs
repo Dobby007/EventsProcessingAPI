@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EventUtility
+namespace BenchmarkTest
 {
     class ConsoleProgress : IProgress<int>
     {

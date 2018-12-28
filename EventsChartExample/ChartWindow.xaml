@@ -16,7 +16,7 @@
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll='True' Grid.Row="0">
             <chart:EventsChart x:Name="EventsChart" Offset="100000" SegmentSize="10000"
                                BucketContainer="{Binding BucketContainer, ElementName=ThisWindow}"
-                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseWheel="EventsChart_MouseWheel" />
+                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
         </ScrollViewer>
 
         <TextBlock HorizontalAlignment="Stretch" Margin="10,0,0,10" 

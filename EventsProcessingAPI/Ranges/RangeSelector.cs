@@ -33,7 +33,7 @@ namespace EventsProcessingAPI.Ranges
 
                 if (upperBound.bucketIndex < lowerBound.bucketIndex)
                 {
-                    throw new InvalidOperationException();
+                    return new Range(false);
                 }
 
                 return new Range(lowerBound.bucketIndex, upperBound.bucketIndex, lowerBound.eventIndex, upperBound.eventIndex);

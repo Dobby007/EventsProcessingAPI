@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BenchmarkTest": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin"
+    }
+  }
+}

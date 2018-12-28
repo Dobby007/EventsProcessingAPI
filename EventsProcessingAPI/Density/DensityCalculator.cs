@@ -77,7 +77,16 @@ namespace EventsProcessingAPI.Density
             
             start += skippedDensities * segmentSize;
 
-            var events = container.GetEvents(start, end);
+            EventEnumerable events;
+            try
+            {
+                events = container.GetEvents(start, end);
+            }
+            catch (RangeNotFoundException)
+            {
+                return densities;
+            }
+
             CalculateDensities(
                 events, 
                 events.Buckets,

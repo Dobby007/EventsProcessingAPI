@@ -27,19 +27,6 @@ namespace EventsChartExample
             BucketContainer = bucketContainer;
             InitializeComponent();
         }
-
-        private void EventsChart_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            Debug.WriteLine("Mouse wheel delta: {0}", e.Delta);
-
-            if (e.Delta > 0)
-            {
-                //EventsChart.ZoomIn();
-            }
-            else
-            {
-                //EventsChart.ZoomOut();
-            }
-        }
+        
     }
 }

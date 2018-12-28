@@ -71,7 +71,7 @@ namespace EventsChart
             nameof(BucketContainer), typeof(BucketContainer), typeof(EventsChart), new PropertyMetadata(OnBucketContainerChanged));
 
         public static readonly DependencyProperty OffsetProperty = DependencyProperty.Register(
-            nameof(Offset), typeof(long), typeof(EventsChart), new PropertyMetadata(0L, null, CoerceOffset));
+            nameof(Offset), typeof(long), typeof(EventsChart), new PropertyMetadata(-1L, null, CoerceOffset));
 
         public static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
             nameof(SegmentSize), typeof(long), typeof(EventsChart), new PropertyMetadata(-1L, OnSegmentSizeChanged, CoerceSegmentSize));
@@ -128,6 +128,8 @@ namespace EventsChart
             {
                 chart.UpdateScrollInfo();
             }
+
+            d.CoerceValue(OffsetProperty);
         }
 
         
@@ -137,7 +139,22 @@ namespace EventsChart
             long offset = (long)value;
             if (d is EventsChart chart)
             {
-                return Math.Min(offset, chart.BucketContainer?.LastTimestamp ?? 0L);
+                var container = chart.BucketContainer;
+                if (container == null || offset == -1)
+                    return offset;
+
+                long lastTimestamp = container.LastTimestamp;
+                long viewportDuration = (long)(chart.ActualWidth * chart.SegmentSize);
+                long displayedRange = container.FirstTimestamp + offset + viewportDuration;
+
+                long diff;
+                if ((diff = displayedRange - lastTimestamp) > 0)
+                {
+                    displayedRange -= diff;
+                    offset = displayedRange - container.FirstTimestamp - viewportDuration;
+                }
+
+                return Math.Max(Math.Min(offset, lastTimestamp), 0);
             }
             return offset;
         }
@@ -208,10 +225,12 @@ namespace EventsChart
 
         public void MouseWheelDown()
         {
+            ZoomOut();
         }
 
         public void MouseWheelUp()
         {
+            ZoomIn();
         }
 
         public void MouseWheelLeft()

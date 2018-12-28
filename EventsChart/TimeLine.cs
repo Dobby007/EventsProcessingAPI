@@ -111,6 +111,9 @@ namespace EventsChart
             if (labelTime / (double)bestTimeUnitDuration < 1)
                 return "";
 
+            if (bestTimeUnitDuration == 1)
+                return $"{labelTime % 1000}{bestTimeUnit.GetTimeUnitAsString()}";
+
             return $"{labelTime / bestTimeUnitDuration % bestTimeUnitDuration}{bestTimeUnit.GetTimeUnitAsString()}";
         }
     }

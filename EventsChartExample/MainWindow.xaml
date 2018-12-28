@@ -12,7 +12,7 @@
         <GroupBox Header="Выберите файл для загрузки">
             <DockPanel LastChildFill="True" HorizontalAlignment="Stretch" Margin="0,1">
                 <Button x:Name="SelectFileBtn" Width="20" Content="..." Margin="5,0,0,0" DockPanel.Dock="Right" HorizontalAlignment="Right" Click="SelectFileBtn_Click"/>
-                <TextBox x:Name="SelectiFilePath" Width="Auto" IsEnabled="False" Text="C:\Projects\JetbrainsTestTask\Data\events.bin" />
+                <TextBox x:Name="SelectiFilePath" Width="Auto" IsEnabled="False" Text="C:\Projects\eventsprocessingapi\Data\events.bin" />
             </DockPanel>
         </GroupBox>
 

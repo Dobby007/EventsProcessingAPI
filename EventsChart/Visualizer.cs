@@ -15,6 +15,7 @@ namespace EventsChart
     {
         private readonly IChartArea _chartArea;
         private Brush _lineBrush = new SolidColorBrush(Colors.Coral);
+        private Path _path;
 
         public Visualizer(IChartArea chartArea)
         {
@@ -41,27 +42,18 @@ namespace EventsChart
             });
 
             var stopwatch1 = Stopwatch.StartNew();
-            _chartArea.Canvas.Children.Clear();
-            for (var i = 0; i < densities.Length; i++)
+            if (_path == null)
             {
-                if (densities[i] == 0)
-                    continue;
-
-                if (densities[i] < 0 || densities[i] > 1)
-                    throw new ArithmeticException("Density must belong to the range [0; 1]");
-
-                int lineHeight = (int)(densities[i] * height);
-                var line = new Line()
+                _path = new Path()
                 {
-                    Stroke = _lineBrush,
-                    X1 = i,
-                    X2 = i,
-                    Y1 = height,
-                    Y2 = height - lineHeight
+                    Stroke = Brushes.Coral,
+                    StrokeThickness = 1,
+                    Fill = Brushes.Coral
                 };
-
-                _chartArea.AddToView(line);
+                _chartArea.AddToView(_path);
             }
+            _path.Data = new PathGeometry(new[] { CreatePathFigure(densities, height) });
+            
             stopwatch1.Stop();
             Debug.WriteLine("Canvas was repainted in {0}ms", stopwatch1.ElapsedMilliseconds);
         }
@@ -70,14 +62,17 @@ namespace EventsChart
         {
             if (densities.Length < 1)
                 return null;
-            Point startPoint = new Point(0, 0);
 
             var segment = new PolyLineSegment();
             var points = segment.Points;
             double currentValue = 0, prevValue = 0;
+            int chartHeight = (int)height;
             for (var i = 0; i < densities.Length; i++)
             {
-                currentValue = (int)(densities[i] * height);
+                if (densities[i] < 0 || densities[i] > 1)
+                    throw new ArithmeticException("Density must belong to the range [0; 1]");
+
+                currentValue = chartHeight - (int)(densities[i] * chartHeight);
                 if (i > 0 && prevValue != currentValue)
                 {
                     points.Add(new Point(i - 1, currentValue));
@@ -87,7 +82,8 @@ namespace EventsChart
                 prevValue = currentValue;
             }
 
-
+            points.Add(new Point(densities.Length - 1, chartHeight));
+            Point startPoint = new Point(0, chartHeight);
             var figure = new PathFigure(startPoint, new[] { segment }, true);
 
             return figure;
