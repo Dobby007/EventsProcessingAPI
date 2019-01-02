@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PerfomanceTest": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin"
+    }
+  }
+}
