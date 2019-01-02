@@ -21,7 +21,7 @@ namespace EventsProcessingAPI.Ranges
             }
 
             if (start < firstTimeStamp)
-                throw new ArgumentException(nameof(start));
+                start = firstTimeStamp;
 
             if (end < firstTimeStamp || end < start)
                 throw new ArgumentException(nameof(end));
@@ -48,9 +48,6 @@ namespace EventsProcessingAPI.Ranges
 
         private static (int bucketIndex, int eventIndex) GetBound(ReadOnlySpan<Bucket> buckets, long eventTime, bool isUpperBound = true)
         {
-            var bucketOffset = eventTime / Bucket.MaxRelativeEventTime;
-            var eventRelativeTime = eventTime % Bucket.MaxRelativeEventTime;
-
             int eventIndex = 0;
             int existingBucketIndex = GetNearestBucketIndexForOffset(buckets, eventTime);
             if (existingBucketIndex < 0)
@@ -94,10 +91,10 @@ namespace EventsProcessingAPI.Ranges
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetNearestBucketIndexForOffset(ReadOnlySpan<Bucket> buckets, long offset)
+        private static int GetNearestBucketIndexForOffset(ReadOnlySpan<Bucket> buckets, long absTime)
         {
             return buckets.BinarySearch(
-                Bucket.CreateFakeBucket(offset / Bucket.MaxRelativeEventTime), 
+                Bucket.CreateFakeBucket(absTime / Bucket.MaxBucketEventTime), 
                 new BucketOffsetComparer()
             );
         }
@@ -107,7 +104,7 @@ namespace EventsProcessingAPI.Ranges
         {
             return Array.BinarySearch(
                 events,
-                new Event(EventType.Start, (ushort)(absTime % Bucket.MaxRelativeEventTime)), 
+                new Event(EventType.Start, (uint)(absTime % Bucket.MaxBucketEventTime)), 
                 new EventComparer()
             );
         }

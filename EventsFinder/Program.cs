@@ -72,9 +72,9 @@ namespace EventUtility
                 LoadingCompletedTemplate,
                 eventsTotalCount,
                 container.Buckets.Length,
-                startTimestamp,
-                endTimestamp,
-                (endTimestamp - startTimestamp) / 1000
+                startTimestamp / 10,
+                endTimestamp / 10,
+                (endTimestamp - startTimestamp) / 10000
             );
 
             var interactiveUserMode = new InteractiveUserMode(

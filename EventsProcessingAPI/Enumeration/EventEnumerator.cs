@@ -5,16 +5,16 @@ using System.Text;
 
 namespace EventsProcessingAPI
 {
-    public class EventEnumerator : AbstractEventEnumerator<BucketEvent>
+    public class EventEnumerator : AbstractEventEnumerator<EventBucketInfo>
     {
-        private BucketEvent _currentItem;
+        private EventBucketInfo _currentItem;
 
         public EventEnumerator(Memory<Bucket> buckets, int firstEventIndex, int lastEventIndex) 
             : base(buckets, firstEventIndex, lastEventIndex)
         {
         }
 
-        public ref BucketEvent Current => ref _currentItem;
+        public ref EventBucketInfo Current => ref _currentItem;
 
         public void Dispose()
         {
@@ -26,7 +26,7 @@ namespace EventsProcessingAPI
         {
             Bucket currentBucket = _buckets.Span[_currentBucketIndex];
 
-            _currentItem = new BucketEvent(
+            _currentItem = new EventBucketInfo(
                 currentBucket.Events[_currentEventIndex],
                 _currentBucketIndex,
                 _currentEventIndex

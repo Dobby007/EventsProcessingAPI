@@ -59,10 +59,10 @@ namespace EventsProcessingAPI
 
         private void ReadAllEvents(bool enablePayload, IProgress<int> progress)
         {
-            
-            
-            var eventsBuffer = new Event[ushort.MaxValue];
-            var payloadsBuffer = new Payload[ushort.MaxValue];
+            // Pre-allocated buffers for events and payloads
+            var eventsBuffer = new Event[Bucket.MaxBucketEventTime];
+            var payloadsBuffer = new Payload[Bucket.MaxBucketEventTime];
+
             int eventsBucketSize = 0;
             long? firstTimestamp = null;
             long bucketOffset = 0;
@@ -70,6 +70,7 @@ namespace EventsProcessingAPI
             long lastEventTime = 0;
             EventType lastEventType = EventType.Stop; // first event type is Start anyway
 
+            // Try to calculate total events count
             if (GetEventsCount(out var eventsCount, out var streamLength))
             {
                 TotalEventsCount = eventsCount;
@@ -81,19 +82,22 @@ namespace EventsProcessingAPI
                 while (true)
                 {
                     bool isStartEvent = !_reader.ReadBoolean();
-                    long eventTime = _reader.ReadInt64() / 10;
+                    long eventTime = _reader.ReadInt64();
+
+                    // The current event time must be greater than the previous one, othewise a file is corrupted
                     if (eventTime < lastEventTime)
                         throw new BadEventSourceException("File is corrupted. Events are not sorted in ascending order.");
                     
-
+                    // The following condition is true only for the first iteration
                     if (!firstTimestamp.HasValue)
                     {
+                        // We manipulate with microseconds
                         firstTimestamp = FirstTimestamp = eventTime;
-                        bucketOffset = eventTime / Bucket.MaxRelativeEventTime;
+                        bucketOffset = eventTime / Bucket.MaxBucketEventTime;
                     }
 
-                    
-                    if (eventTime / Bucket.MaxRelativeEventTime != bucketOffset || eventsBucketSize >= ushort.MaxValue)
+                    // We need to create a new bucket if an event does not fit into the previous one
+                    if (eventTime / Bucket.MaxBucketEventTime != bucketOffset)
                     {
                         if (totalStreamLength.HasValue)
                         {
@@ -102,11 +106,11 @@ namespace EventsProcessingAPI
 
                         _buckets.Add(GetBucket(eventsBuffer, enablePayload ? payloadsBuffer : null, eventsBucketSize, bucketOffset));
                         eventsBucketSize = 0;
-                        bucketOffset = eventTime / Bucket.MaxRelativeEventTime;
+                        bucketOffset = eventTime / Bucket.MaxBucketEventTime;
                     }
                     
 
-                    ushort offset = Convert.ToUInt16(eventTime % Bucket.MaxRelativeEventTime);
+                    uint bucketEventTime = Convert.ToUInt32(eventTime % Bucket.MaxBucketEventTime);
 
                     long first = _reader.ReadInt64();
                     long second = _reader.ReadInt64();
@@ -117,16 +121,21 @@ namespace EventsProcessingAPI
                     if (lastEventType == eventType)
                         continue;
 
-                    eventsBuffer[eventsBucketSize] = new Event(eventType, offset);
+                    eventsBuffer[eventsBucketSize] = new Event(eventType, bucketEventTime);
+                    // We don't need payloads if user does not want to know anything about them
                     if (enablePayload)
                     {
                         payloadsBuffer[eventsBucketSize] = new Payload(first, second, third, fourth);
                     }
 
+                    #if DEBUG
+                    var curEvent = eventsBuffer[eventsBucketSize];
                     Debug.Assert(
                         eventsBucketSize < 1 ||
-                        eventsBuffer[eventsBucketSize].RelativeTime > eventsBuffer[eventsBucketSize - 1].RelativeTime
+                        curEvent.EventTimeHigh > eventsBuffer[eventsBucketSize - 1].EventTimeHigh ||
+                        (curEvent.EventTimeHigh == eventsBuffer[eventsBucketSize - 1].EventTimeHigh && curEvent.EventTimeLow > eventsBuffer[eventsBucketSize - 1].EventTimeLow)
                     );
+                    #endif
 
                     eventsBucketSize++;
                     lastEventTime = eventTime;
@@ -160,6 +169,12 @@ namespace EventsProcessingAPI
             return new Bucket(bucketOffset, eventsInBucket, payloadsInBucket);
         }
 
+        /// <summary>
+        /// Tries to calculate total events based on the stream length
+        /// </summary>
+        /// <param name="eventsCount">Total events count</param>
+        /// <param name="totalStreamLength">Input stream length</param>
+        /// <returns>True if calculation was succeeded</returns>
         private bool GetEventsCount(out uint eventsCount, out long totalStreamLength)
         {
             try

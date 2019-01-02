@@ -39,7 +39,7 @@ namespace EventsProcessingAPI.Density
 
         public void ProcessBucket(ArraySegment<Bucket> buckets, int index)
         {
-            if (index % 500 == 0)
+            if (index % 500 == 0 && index > 0)
                 ProcessNewBuckets(buckets, false);
         }
 
@@ -50,7 +50,7 @@ namespace EventsProcessingAPI.Density
             var lastEventAbsoluteTime = lastBucket.GetAbsoluteTimeForEvent(lastBucket.GetLastEvent());
             var firstEventAbsoluteTime = buckets[0].GetAbsoluteTimeForEvent(buckets[0].GetFirstEvent());
 
-            uint segmentSize = 1_000_000;
+            uint segmentSize = 10_000_000;
 
             if (isCompleted || lastEventAbsoluteTime - (GetStartTime(buckets, TimeUnit.Second) ?? firstEventAbsoluteTime) > segmentSize * 30)
             {

@@ -33,7 +33,7 @@ namespace EventsProcessingAPI.Density
         public bool TrySetDensitiesUsingHints(long start, long end, long segmentSize, double[] targetBuffer, out int totalSegments)
         {
             // we can't use hints if segment size is lesser than 1s
-            if (segmentSize < 1_000_000)
+            if (segmentSize < 10_000_000)
             {
                 totalSegments = 0;
                 return false;
@@ -86,12 +86,12 @@ namespace EventsProcessingAPI.Density
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryGetMaxDensityHintTimeUnit(long segmentSize, out TimeUnit timeUnit)
         {
-            if (segmentSize % 60_000_000 == 0)
+            if (segmentSize % 600_000_000 == 0)
             {
                 timeUnit = TimeUnit.Minute;
                 return true;
             } 
-            else if (segmentSize % 1_000_000 == 0)
+            else if (segmentSize % 10_000_000 == 0)
             {
                 timeUnit = TimeUnit.Second;
                 return true;

@@ -11,15 +11,15 @@ namespace EventsProcessingAPI.Common
             switch (timeUnit)
             {
                 case TimeUnit.Microsecond:
-                    return 1;
+                    return 10L;
                 case TimeUnit.Millisecond:
-                    return 1000;
+                    return 10000L;
                 case TimeUnit.Second:
-                    return 1000 * 1000;
+                    return 10000L * 1000;
                 case TimeUnit.Minute:
-                    return 1000 * 1000 * 60;
+                    return 10000L * 1000 * 60;
                 case TimeUnit.Hour:
-                    return 1000L * 1000 * 60 * 60;
+                    return 10000L * 1000 * 60 * 60;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timeUnit));
             }

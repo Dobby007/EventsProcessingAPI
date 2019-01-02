@@ -14,12 +14,14 @@ namespace EventsChart
     internal class Visualizer
     {
         private readonly IChartArea _chartArea;
-        private Brush _lineBrush = new SolidColorBrush(Colors.Coral);
+        private Brush _lineBrush;
         private Path _path;
 
         public Visualizer(IChartArea chartArea)
         {
             _chartArea = chartArea;
+            _lineBrush = new SolidColorBrush(Colors.Coral);
+            _lineBrush.Freeze();
         }
 
         public async Task Redraw()
@@ -46,13 +48,15 @@ namespace EventsChart
             {
                 _path = new Path()
                 {
-                    Stroke = Brushes.Coral,
+                    Stroke = _lineBrush,
                     StrokeThickness = 1,
-                    Fill = Brushes.Coral
+                    Fill = _lineBrush
                 };
                 _chartArea.AddToView(_path);
             }
-            _path.Data = new PathGeometry(new[] { CreatePathFigure(densities, height) });
+            var geometry = new PathGeometry(new[] { CreatePathFigure(densities, height) });
+            geometry.Freeze();
+            _path.Data = geometry;
             
             stopwatch1.Stop();
             Debug.WriteLine("Canvas was repainted in {0}ms", stopwatch1.ElapsedMilliseconds);

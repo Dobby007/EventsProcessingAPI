@@ -32,8 +32,8 @@ namespace SimpleTest
                 if (!matches.Success)
                     break;
 
-                long start = long.Parse(matches.Groups[1].Value);
-                long end = long.Parse(matches.Groups[2].Value);
+                long start = long.Parse(matches.Groups[1].Value) * 10;
+                long end = long.Parse(matches.Groups[2].Value) * 10 + 9;
                 
                 var density1 = CalculateAverageDensityBySimpleMethod(args[0], start, end);
                 var density2 = CalculateAverageDensityWithApi(args[0], start, end);

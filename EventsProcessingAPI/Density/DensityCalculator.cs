@@ -65,7 +65,7 @@ namespace EventsProcessingAPI.Density
             }
 
 #if DEBUG
-            if (skippedDensities == 0 && segmentSize >= 1_000_000)
+            if (skippedDensities == 0 && segmentSize >= 10_000_000)
                 Debug.Fail("Density calculation is perfoming in unoptimized way. It can be eliminated by adjusting range and segment size to appropriate values.");
 #endif
 
@@ -177,7 +177,7 @@ namespace EventsProcessingAPI.Density
             int eventsCount = 0;
             EventType lastEventType = EventType.Stop;
             Bucket currentBucket;
-            BucketEvent firstEvent = default, 
+            EventBucketInfo firstEvent = default, 
                         lastEvent = default, 
                         lastAccountedEvent = default;
 

@@ -5,10 +5,21 @@ namespace EventsProcessingAPI.Ranges
 {
     class EventComparer : IComparer<Event>
     {
-        private static IComparer<ushort> DefaultComparer = Comparer<ushort>.Default;
         public int Compare(Event x, Event y)
         {
-            return DefaultComparer.Compare(x.RelativeTime, y.RelativeTime);
+            if (x.EventTimeHigh > y.EventTimeHigh)
+                return 1;
+            else if (x.EventTimeHigh < y.EventTimeHigh)
+                return -1;
+            else
+            {
+                if (x.EventTimeLow > y.EventTimeLow)
+                    return 1;
+                else if (x.EventTimeLow < y.EventTimeLow)
+                    return -1;
+                else
+                    return 0;
+            }
         }
     }
 }

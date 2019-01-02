@@ -24,7 +24,6 @@ namespace EventUtility
 
         public void Start()
         {
-
             while (true)
             {
                 Console.WriteLine(InputRangeTemplate);
@@ -32,10 +31,10 @@ namespace EventUtility
                 if (!matches.Success)
                     break;
 
-                long start = long.Parse(matches.Groups[1].Value);
-                long end = long.Parse(matches.Groups[2].Value);
+                long start = long.Parse(matches.Groups[1].Value) * 10;
+                long end = long.Parse(matches.Groups[2].Value) * 10 + 9;
 
-                Console.WriteLine("Your range length is {0:0.00}s.\n", (end - start) / (double)1000000);
+                Console.WriteLine("Your range length is {0:0.00}s.\n", (end - start) / (double)10000000);
                 switch (InteractiveModeType)
                 {
                     case InteractiveModeType.ShowPayloads:

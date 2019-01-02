@@ -2,7 +2,7 @@
   "profiles": {
     "DifferentStrategiesTest": {
       "commandName": "Project",
-      "commandLineArgs": "..\\..\\..\\..\\..\\Data\\events.bin"
+      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin"
     }
   }
 }

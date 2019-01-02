@@ -14,8 +14,8 @@ namespace EventsProcessingAPI.Density
 
             var list = new List<long>();
             long maxSegmentSize = (long)Math.Ceiling((endTime - startTime) / (double)segmentsCount);
-            long segmentSize = 1;
             TimeUnit currentTimeUnit = TimeUnit.Microsecond;
+            long segmentSize = currentTimeUnit.GetTimeUnitDuration();
 
             while (segmentSize <= maxSegmentSize)
             {

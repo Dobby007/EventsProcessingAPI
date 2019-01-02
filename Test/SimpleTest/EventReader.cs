@@ -57,9 +57,6 @@ namespace SimpleTest
 
         private void ReadAllEvents(bool enablePayload, IProgress<int> progress)
         {
-            
-            
-            var eventsBuffer = new Event[ushort.MaxValue];
             long? firstTimestamp = null;
             double? totalStreamLength = null;
             long lastEventTime = 0;
@@ -75,7 +72,7 @@ namespace SimpleTest
                 while (true)
                 {
                     bool isStartEvent = !_reader.ReadBoolean();
-                    long eventTime = _reader.ReadInt64() / 10;
+                    long eventTime = _reader.ReadInt64();
 
                     Debug.Assert(eventTime > lastEventTime);
 

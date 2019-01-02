@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace EventsDomain
 {
     public class Bucket
     {
-        public const long MaxRelativeEventTime = 60000;
+        /// <summary>
+        /// Maximum event time that can be stored in the bucket (resolution: 1 CPU tick (1/10 of microsecond)
+        /// </summary>
+        public const long MaxBucketEventTime = 10_000_000;
+        
 
         public readonly long Offset;
         public readonly Event[] Events;
@@ -20,14 +25,28 @@ namespace EventsDomain
             return Events[0];
         }
 
-        public long GetAbsoluteTimeForEvent(in Event ev)
+        /// <summary>
+        /// Resolution: microsecond
+        /// </summary>
+        /// <param name="ev"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public long GetAbsoluteTimeForEvent(Event ev)
         {
-            return Bucket.MaxRelativeEventTime * Offset + ev.RelativeTime;
+            return MaxBucketEventTime * Offset + 
+                (ev.EventTimeHigh << 4 | ev.EventTimeLow >> 4) * 10 + 
+                (ev.EventTimeLow & Event.CpuTickMask);
         }
 
+        /// <summary>
+        /// Resolution: microsecond
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long GetAbsoluteTimeForEvent(int index)
         {
-            return Bucket.MaxRelativeEventTime * Offset + Events[index].RelativeTime;
+            return GetAbsoluteTimeForEvent(Events[index]);
         }
 
         public Event GetLastEvent()

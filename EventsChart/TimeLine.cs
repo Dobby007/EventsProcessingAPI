@@ -17,6 +17,7 @@ namespace EventsChart
 
         public TimeLine()
         {
+            _defaultPen.Freeze();
             SizeChanged += (o, e) =>
             {
                 InvalidateVisual();
