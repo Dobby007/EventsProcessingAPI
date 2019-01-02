@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Range = EventsProcessingAPI.Ranges.RangeSelector.Range;
 
 namespace EventsProcessingAPI.Density
@@ -76,26 +77,32 @@ namespace EventsProcessingAPI.Density
                 return densities;
             
             start += skippedDensities * segmentSize;
+            
 
-            EventEnumerable events;
-            try
-            {
-                events = container.GetEvents(start, end);
-            }
-            catch (RangeNotFoundException)
-            {
-                return densities;
-            }
+            var leftDensities = densities.AsMemory(skippedDensities);
+            
 
-            CalculateDensities(
-                events, 
-                events.Buckets,
-                start, 
-                segmentSize, 
-                densities.AsSpan(skippedDensities),
-                true,
-                out Range processedRange
-            );
+            Parallel.For(0, (int)Math.Ceiling(leftDensities.Length / 100D), i =>
+            {
+                var span = leftDensities.Span;
+                int leftBoundary = i * 100;
+                int rightBoundary = (i + 1) * 100 - 1;
+                if (rightBoundary >= span.Length)
+                    rightBoundary = span.Length - 1;
+
+
+                CalculateDensities(
+                    container.Buckets,
+                    start + leftBoundary * segmentSize,
+                    start + rightBoundary * segmentSize,
+                    container.FirstTimestamp,
+                    segmentSize,
+                    span.Slice(leftBoundary, rightBoundary - leftBoundary + 1),
+                    true,
+                    out Range processedRange
+                );
+            });
+
 
             return densities;
         }
@@ -129,22 +136,15 @@ namespace EventsProcessingAPI.Density
             {
                 throw new ArgumentException("Too small segment size for such a big range", nameof(segmentSize));
             }
-            
-            var range = RangeSelector.GetRange(buckets, start.Value, end, start.Value);
-            if (!range.IsFound)
-                throw new RangeNotFoundException();
 
-            var events = new EventEnumerable(
-                bucketsArray.AsMemory(range.FirstBucketIndex, range.Length),
-                range.FirstEventIndex,
-                range.LastEventIndex
-            );
+            var range = RangeSelector.GetRange(buckets, start.Value, end, start.Value);
 
             var densitiesBuf = new double[totalSegments];
             CalculateDensities(
-                events,
-                buckets.Slice(range.FirstBucketIndex, range.Length), 
-                start,
+                bucketsArray.AsMemory(), 
+                start.Value,
+                end,
+                start.Value,
                 segmentSize,
                 densitiesBuf,
                 finalize,
@@ -160,16 +160,28 @@ namespace EventsProcessingAPI.Density
 
 
         private static void CalculateDensities(
-            EventEnumerable events, 
-            ReadOnlySpan<Bucket> buckets, 
+            Memory<Bucket> bucketsArray, 
             long? start,
+            long end,
+            long? firstTimestamp,
             long segmentSize, 
             Span<double> targetBuffer,
             bool finalize,
             out Range processedRange
         )
         {
-            
+            var buckets = bucketsArray.Span;
+            var range = RangeSelector.GetRange(bucketsArray.Span, start.Value, end, start.Value);
+            if (!range.IsFound)
+                throw new RangeNotFoundException();
+
+            buckets = buckets.Slice(range.FirstBucketIndex, range.Length);
+            var events = new EventEnumerable(
+                bucketsArray.Slice(range.FirstBucketIndex, range.Length),
+                range.FirstEventIndex,
+                range.LastEventIndex
+            );
+
             long filled = 0, unfilled = 0;
             long distance = segmentSize;
             long lastEventTime = -1, currentEventTime = 0;
