@@ -13,7 +13,7 @@ namespace EventsProcessingAPI
 
         public EventEnumerator GetEnumerator()
         {
-            return new EventEnumerator(_buckets, _firstEventIndex, _lastEventIndex);
+            return new EventEnumerator(_buckets.Span, _firstEventIndex, _lastEventIndex);
         }
         
     }

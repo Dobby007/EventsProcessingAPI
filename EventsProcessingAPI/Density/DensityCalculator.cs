@@ -182,9 +182,9 @@ namespace EventsProcessingAPI.Density
                         lastAccountedEvent = default;
 
 
-            
 
-            foreach (ref readonly var ev in events)
+
+            foreach (var ev in events)
             {
                 currentBucket = buckets[ev.BucketIndex];
                 if (eventsCount == 0)
