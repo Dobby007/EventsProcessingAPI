@@ -6,6 +6,7 @@ using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Validators;
 using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -37,13 +38,40 @@ namespace BenchmarkTest
     public class DensityCalculationTest
     {
         public const string FilePathEnvVariable = nameof(DensityCalculationTest) + "_" + "FilePath";
-        
+
         public long Start { get; set; }
 
         public long End { get; set; }
-        
-        [Params(1, 500, 1000, 10000, 50000, 100000, 250000, 500000, 1000000, 2000000)]
+
+        [ParamsSource(nameof(SegmentSizes))]
         public long SegmentSize { get; set; }
+
+        public IEnumerable<long> SegmentSizes
+        {
+            get
+            {
+                var realworldDurations = new long[]
+                {
+                    #region Durations
+                    1, // 1µs
+                    500, // 500µs
+                    1000, // 1ms
+                    10000, // 10ms
+                    50000, // 50ms
+                    100000, // 100ms
+                    200000, // 200ms
+                    400000, // 400ms
+                    500000, // 500ms
+                    1000000, // 1s
+                    2000000, // 2s
+                    4000000, // 4s
+                    10000000, // 10s
+                    20000000 // 20s
+                    #endregion
+                };
+                return realworldDurations.Select(d => d * TimeUnit.Microsecond.GetTimeUnitDuration());
+            }
+        }
 
         public BucketContainer BucketContainer { get; set; }
 
