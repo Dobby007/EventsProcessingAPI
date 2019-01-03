@@ -111,9 +111,10 @@ namespace EventsProcessingAPI.Density
         /// Gets densities for segments with size equal to <paramref name="segmentSize"/>
         /// </summary>
         /// <param name="buckets">Array of buckets</param>
+        /// <param name="start">Start timestamp of the event range we want to find</param>
         /// <param name="segmentSize">Length/duration of one segment</param>
-        /// <param name="finalize">Flag indicating that density calculation must be done for incomplete segments</param>
-        /// <param name="processedRange">Processed range</param>
+        /// <param name="finalize">Flag indicating that density should be calculated for the last incomplete segment if there is one</param>
+        /// <param name="processedRange">The range we have processed so far</param>
         /// <returns></returns>
         public static double[] GetDensities(ArraySegment<Bucket> bucketsArray, long? start, long segmentSize, bool finalize, out Range processedRange)
         {
@@ -148,12 +149,12 @@ namespace EventsProcessingAPI.Density
                 segmentSize,
                 densitiesBuf,
                 finalize,
-                out Range processedSpanRange
+                out Range relativeProcessedRange
             );
 
             processedRange = range.FirstBucketIndex == 0
-                ? processedSpanRange
-                : processedSpanRange.AddOffset(range.FirstBucketIndex);
+                ? relativeProcessedRange
+                : relativeProcessedRange.AddOffset(range.FirstBucketIndex);
 
             return densitiesBuf;
         }
@@ -235,10 +236,9 @@ namespace EventsProcessingAPI.Density
                     while (distance >= segmentSize)
                     {
                         long oldDistance = distance;
-                        targetBuffer[segmentIndex] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
+                        targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
                         lastEventTime += oldDistance - distance;
                         distance = currentEventTime - lastEventTime;
-                        segmentIndex++;
                         calculatedDensities++;
                     }
                     if (calculatedDensities > 0)
@@ -267,21 +267,30 @@ namespace EventsProcessingAPI.Density
             }
 
             
+            // we need to check whether there are any more events to wait for or we have processed all events
             if (finalize && segmentIndex < targetBuffer.Length)
             {
-                // we processed the whole range but the last density value is not completely calculated
+                // we processed the whole range but some density values remain uncalculated
                 distance = segmentSize;
-                targetBuffer[segmentIndex] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
+                targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
                 processedRange = new Range(firstEvent.BucketIndex, lastEvent.BucketIndex, firstEvent.EventIndex, lastEvent.EventIndex);
+
+                // we need to set densities for segments that we didn't processed due to the lack of the events
+                if (lastEventType == EventType.Start && eventsCount > 0)
+                    for (; segmentIndex < targetBuffer.Length; segmentIndex++)
+                        targetBuffer[segmentIndex] = 1;
             }
             else if (!finalize)
             {
                 // there are some other events to wait for
-                processedRange = new Range(firstEvent.BucketIndex, lastAccountedEvent.BucketIndex, firstEvent.EventIndex, lastAccountedEvent.EventIndex);
+                if (segmentIndex == 0)
+                    processedRange = new Range(false); // we have not calculated any densities
+                else 
+                    processedRange = new Range(firstEvent.BucketIndex, lastAccountedEvent.BucketIndex, firstEvent.EventIndex, lastAccountedEvent.EventIndex);  // we have calculated some densities
             }
             else if (filled + unfilled == 0)
             {
-                // we processed the whole range
+                // we processed the whole range and calculated all the densities
                 processedRange = new Range(firstEvent.BucketIndex, lastEvent.BucketIndex, firstEvent.EventIndex, lastEvent.EventIndex);
             }
             else 

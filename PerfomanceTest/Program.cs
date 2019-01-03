@@ -35,9 +35,9 @@ namespace PerfomanceTest
             
             RunPerfomanceTests(
                 container, 
-                startTimestamp, 
-                endTimestamp, 
-                container.GetPreferredSegmentSizes(startTimestamp, endTimestamp, 800)
+                startTimestamp,
+                /*startTimestamp + 400 * 1000,*/ endTimestamp,
+                /*new[] { 400L,200L, 100L }*/ container.GetPreferredSegmentSizes(startTimestamp, endTimestamp, 800)
             );
         }
 
@@ -51,7 +51,7 @@ namespace PerfomanceTest
                 var stopWatch = new Stopwatch();
                 foreach (var segmentSize in segmentSizes)
                 {
-                    long tStart = start, tEnd = Math.Min(start + segmentSize * 2000, end);
+                    long tStart = start, tEnd = Math.Min(start + segmentSize * 4000, end);
                     stopWatch.Start();
                     var densities = container.GetDensities(tStart, tEnd, segmentSize);
                     var elapsed = stopWatch.ElapsedMilliseconds;
