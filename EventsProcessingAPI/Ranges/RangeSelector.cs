@@ -31,12 +31,14 @@ namespace EventsProcessingAPI.Ranges
                 var lowerBound = GetBound(buckets, start, false);
                 var upperBound = GetBound(buckets, end, true);
 
-                if (upperBound.bucketIndex < lowerBound.bucketIndex)
-                {
-                    return new Range(false);
+                if (
+                    upperBound.bucketIndex > lowerBound.bucketIndex ||
+                    (upperBound.bucketIndex == lowerBound.bucketIndex && upperBound.eventIndex >= lowerBound.eventIndex)
+                ) {
+                    return new Range(lowerBound.bucketIndex, upperBound.bucketIndex, lowerBound.eventIndex, upperBound.eventIndex);
                 }
-
-                return new Range(lowerBound.bucketIndex, upperBound.bucketIndex, lowerBound.eventIndex, upperBound.eventIndex);
+                
+                return new Range(false, upperBound.bucketIndex, upperBound.eventIndex);
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -132,6 +134,9 @@ namespace EventsProcessingAPI.Ranges
             public readonly int FirstEventIndex;
             public readonly int LastEventIndex;
 
+            public readonly int NearestBucketIndex;
+            public readonly int NearestEventIndex;
+
             /// <summary>
             /// Length of range, i.e. count of buckets included into the range.
             /// </summary>
@@ -139,17 +144,27 @@ namespace EventsProcessingAPI.Ranges
 
             public readonly bool IsFound;
 
-            public Range(int firstBucketIndex, int lastBucketIndex, int firstEventIndex, int lastEventIndex) : this()
+            public bool IsNearestEventFound => NearestBucketIndex >= 0 && NearestEventIndex >= 0;
+
+            public Range(int firstBucketIndex, int lastBucketIndex, int firstEventIndex, int lastEventIndex)
             {
                 FirstBucketIndex = firstBucketIndex;
                 LastBucketIndex = lastBucketIndex;
                 FirstEventIndex = firstEventIndex;
                 LastEventIndex = lastEventIndex;
+                NearestBucketIndex = -1;
+                NearestEventIndex = -1;
                 IsFound = true;
             }
 
-            public Range(bool isFound) : this(0, 0, 0, 0)
+            public Range(bool isFound) : this(-1, -1, -1, -1)
             {
+                IsFound = isFound;
+            }
+            public Range(bool isFound, int nearestBucketIndex, int nearestEventIndex) : this(-1, -1, -1, -1)
+            {
+                NearestBucketIndex = nearestBucketIndex;
+                NearestEventIndex = nearestEventIndex;
                 IsFound = isFound;
             }
 

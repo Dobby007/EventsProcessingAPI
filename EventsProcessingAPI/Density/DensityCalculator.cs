@@ -2,7 +2,6 @@
 using EventsProcessingAPI.Exceptions;
 using EventsProcessingAPI.Ranges;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -173,16 +172,10 @@ namespace EventsProcessingAPI.Density
         {
             var buckets = bucketsArray.Span;
             var range = RangeSelector.GetRange(bucketsArray.Span, start.Value, end, start.Value);
-            if (!range.IsFound)
+            if (!range.IsFound && !range.IsNearestEventFound)
                 throw new RangeNotFoundException();
 
-            buckets = buckets.Slice(range.FirstBucketIndex, range.Length);
-            var events = new EventEnumerable(
-                bucketsArray.Slice(range.FirstBucketIndex, range.Length),
-                range.FirstEventIndex,
-                range.LastEventIndex
-            );
-
+            EventEnumerable events;
             long filled = 0, unfilled = 0;
             long distance = segmentSize;
             long lastEventTime = -1, currentEventTime = 0;
@@ -190,12 +183,26 @@ namespace EventsProcessingAPI.Density
             int eventsCount = 0;
             EventType lastEventType = EventType.Stop;
             Bucket currentBucket;
-            EventBucketInfo firstEvent = default, 
-                        lastEvent = default, 
+            EventBucketInfo firstEvent = default,
+                        lastEvent = default,
                         lastAccountedEvent = default;
 
-
-
+            // if there is no events in the range we need to find previous event type to calculate densities based on it
+            if (!range.IsFound)
+            {
+                Event nearestEvent = buckets[range.NearestBucketIndex].Events[range.NearestEventIndex];
+                lastEventType = nearestEvent.EventType;
+                events = EventEnumerable.Empty;
+            }
+            else
+            {
+                buckets = buckets.Slice(range.FirstBucketIndex, range.Length);
+                events = new EventEnumerable(
+                    bucketsArray.Slice(range.FirstBucketIndex, range.Length),
+                    range.FirstEventIndex,
+                    range.LastEventIndex
+                );
+            }
 
             foreach (var ev in events)
             {
@@ -212,8 +219,8 @@ namespace EventsProcessingAPI.Density
 
                         // We can consider event time passed through start parameter as the last event
                         lastEventTime = start.Value;
-                        lastEventType = (EventType)((byte)~firstEvent.Event.EventType & 1);
                     }
+                    lastEventType = (EventType)((byte)~firstEvent.Event.EventType & 1);
                 }
                 
 
@@ -276,7 +283,7 @@ namespace EventsProcessingAPI.Density
                 processedRange = new Range(firstEvent.BucketIndex, lastEvent.BucketIndex, firstEvent.EventIndex, lastEvent.EventIndex);
 
                 // we need to set densities for segments that we didn't processed due to the lack of the events
-                if (lastEventType == EventType.Start && eventsCount > 0)
+                if (lastEventType == EventType.Start)
                     for (; segmentIndex < targetBuffer.Length; segmentIndex++)
                         targetBuffer[segmentIndex] = 1;
             }
