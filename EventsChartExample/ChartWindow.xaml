@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll='True' Grid.Row="0">
-            <chart:EventsChart x:Name="EventsChart" Offset="100000" SegmentSize="{Binding SegmentSize, ElementName=ThisWindow, Mode=TwoWay}"
+            <chart:EventsChart x:Name="EventsChart" SegmentSize="{Binding SegmentSize, ElementName=ThisWindow, Mode=TwoWay}"
                                BucketContainer="{Binding BucketContainer, ElementName=ThisWindow}"
                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
         </ScrollViewer>

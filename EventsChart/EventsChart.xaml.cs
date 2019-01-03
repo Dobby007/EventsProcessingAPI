@@ -145,16 +145,10 @@ namespace EventsChart
 
                 long lastTimestamp = container.LastTimestamp;
                 long viewportDuration = (long)(chart.ActualWidth * chart.SegmentSize);
-                long displayedRange = container.FirstTimestamp + offset + viewportDuration;
+                long lastPossibleTimestamp = (long)Math.Ceiling((container.LastTimestamp - container.FirstTimestamp) / (double)chart.SegmentSize) 
+                    * chart.SegmentSize;
 
-                long diff;
-                if ((diff = displayedRange - lastTimestamp) > 0)
-                {
-                    displayedRange -= diff;
-                    offset = displayedRange - container.FirstTimestamp - viewportDuration;
-                }
-
-                return Math.Max(Math.Min(offset, lastTimestamp), 0);
+                return Math.Max(Math.Min(offset, lastPossibleTimestamp - viewportDuration), 0);
             }
             return offset;
         }
@@ -178,11 +172,12 @@ namespace EventsChart
 
         #region IScrollInfo support
         
-        private double Step => Math.Max(SegmentSize, 0) * 5;
+        private double Step => 5;
         private double WheelSize => 3 * Step;
         
         private Size _extent;
         private Size _viewport;
+        private Point _scrollOffset;
 
         public bool CanVerticallyScroll { get; set; }
 
@@ -192,9 +187,9 @@ namespace EventsChart
 
         public double ExtentWidth => _extent.Width;
 
-        public double HorizontalOffset => Offset;
+        public double HorizontalOffset => _scrollOffset.X;
 
-        public double VerticalOffset => 0;
+        public double VerticalOffset => _scrollOffset.Y;
 
         public double ViewportHeight => _viewport.Height;
 
@@ -267,9 +262,11 @@ namespace EventsChart
         public void SetHorizontalOffset(double offset)
         {
             offset = Math.Max(0, Math.Min(offset, ExtentWidth - ViewportWidth));
-            if (offset != Offset)
+            if (offset != _scrollOffset.X)
             {
-                Offset = (long)offset;
+                long segmentSize = SegmentSize;
+                Offset = (long)offset * segmentSize;
+                _scrollOffset = new Point(Offset / segmentSize, _scrollOffset.Y);
             }
         }
 
@@ -293,13 +290,14 @@ namespace EventsChart
             if (end < start)
                 return;
 
-            Size viewport = new Size(SegmentSize * ActualWidth, 1);
-            Size extent = new Size(end - start, 1);
-            
+            double segmentSize = Math.Max(SegmentSize, 1);
+            Size viewport = new Size(ActualWidth, 1);
+            Size extent = new Size(Math.Ceiling((end - start) / segmentSize), 1);
+            Point scrollOffset = new Point(Math.Max((Offset - start) / segmentSize, 0), 0);
 
             _extent = extent;
             _viewport = viewport;
-            
+            _scrollOffset = scrollOffset;
 
             ScrollOwner?.InvalidateScrollInfo();
         }
