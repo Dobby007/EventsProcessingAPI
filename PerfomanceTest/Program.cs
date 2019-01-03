@@ -36,8 +36,10 @@ namespace PerfomanceTest
             RunPerfomanceTests(
                 container, 
                 startTimestamp,
-                /*startTimestamp + 400 * 1000,*/ endTimestamp,
-                /*new[] { 400L,200L, 100L }*/ container.GetPreferredSegmentSizes(startTimestamp, endTimestamp, 800)
+                //startTimestamp + 400 * 1000,
+                endTimestamp,
+                //new[] { 10L }
+                container.GetPreferredSegmentSizes(startTimestamp, endTimestamp, 800)
             );
         }
 

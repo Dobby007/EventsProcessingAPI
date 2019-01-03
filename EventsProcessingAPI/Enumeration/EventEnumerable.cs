@@ -10,6 +10,7 @@ namespace EventsProcessingAPI
             : base(buckets, firstEventIndex, lastEventIndex)
         {
         }
+        public static EventEnumerable Empty { get; } = new EventEnumerable(Memory<Bucket>.Empty, 0, 0);
 
         public EventEnumerator GetEnumerator()
         {
