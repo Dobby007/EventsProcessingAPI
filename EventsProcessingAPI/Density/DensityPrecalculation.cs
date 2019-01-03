@@ -61,7 +61,8 @@ namespace EventsProcessingAPI.Density
                     isCompleted,
                     out Range processedRange);
 
-                _lastProcessedAbsoluteTime1 = buckets[processedRange.LastBucketIndex].GetAbsoluteTimeForEvent(processedRange.LastEventIndex);
+                if (processedRange.IsFound)
+                    _lastProcessedAbsoluteTime1 = buckets[processedRange.LastBucketIndex].GetAbsoluteTimeForEvent(processedRange.LastEventIndex);
                 AddDensityHints(densities, TimeUnit.Second, segmentSize);
             }
 
@@ -75,7 +76,8 @@ namespace EventsProcessingAPI.Density
                     isCompleted,
                     out Range processedRange);
 
-                _lastProcessedAbsoluteTime2 = buckets[processedRange.LastBucketIndex].GetAbsoluteTimeForEvent(processedRange.LastEventIndex);
+                if (processedRange.IsFound)
+                    _lastProcessedAbsoluteTime2 = buckets[processedRange.LastBucketIndex].GetAbsoluteTimeForEvent(processedRange.LastEventIndex);
                 AddDensityHints(densities, TimeUnit.Minute, segmentSize);
 
             }
