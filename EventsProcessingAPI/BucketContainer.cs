@@ -75,7 +75,7 @@ namespace EventsProcessingAPI
         {
             var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp));
             if (!range.IsFound)
-                throw new RangeNotFoundException();
+                return EventEnumerable.Empty;
 
             return new EventEnumerable(
                 new Memory<Bucket>(_buckets, range.FirstBucketIndex, range.Length),
@@ -88,7 +88,7 @@ namespace EventsProcessingAPI
         {
             var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp));
             if (!range.IsFound)
-                throw new RangeNotFoundException();
+                return RealEventEnumerable.Empty;
 
             return new RealEventEnumerable(
                 new Memory<Bucket>(_buckets, range.FirstBucketIndex, range.Length),

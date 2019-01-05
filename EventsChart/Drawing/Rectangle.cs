@@ -7,11 +7,11 @@ using System.Windows;
 
 namespace EventsChart.Drawing
 {
-    sealed class Rectangular : IFigure
+    sealed class Rectangle : IFigure
     {
         private readonly Rect _rect;
 
-        public Rectangular(Rect rect)
+        public Rectangle(Rect rect)
         {
             _rect = rect;
         }

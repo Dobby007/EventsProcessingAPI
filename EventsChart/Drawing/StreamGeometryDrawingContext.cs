@@ -36,9 +36,9 @@ namespace EventsChart.Drawing
         public void DrawRectangle(Rect rect)
         {
             _geometryContext.BeginFigure(rect.BottomLeft, true, true);
-            _geometryContext.LineTo(rect.TopLeft, true, false);
-            _geometryContext.LineTo(rect.TopRight, true, true);
-            _geometryContext.LineTo(rect.BottomRight, true, true);
+            _geometryContext.LineTo(rect.TopLeft, false, false);
+            _geometryContext.LineTo(rect.TopRight, false, true);
+            _geometryContext.LineTo(rect.BottomRight, false, true);
 
         }
 

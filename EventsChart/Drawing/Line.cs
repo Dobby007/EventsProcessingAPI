@@ -7,20 +7,19 @@ using System.Windows;
 
 namespace EventsChart.Drawing
 {
-    class Polyline : IFigure
+    sealed class Line : IFigure
     {
-        private readonly IList<Point> _points;
         private readonly Point _startPoint;
+        private readonly Point _endPoint;
 
-        public Polyline(Point startPoint, IList<Point> points)
+        public Line(Point startPoint, Point endPoint)
         {
-            _points = points ?? throw new ArgumentNullException(nameof(points));
             _startPoint = startPoint;
+            _endPoint = endPoint;
         }
-
         public void Draw(IDrawingContext context)
         {
-            context.DrawPolyline(_startPoint, _points);
+            context.DrawLine(_startPoint, _endPoint);
         }
     }
 }

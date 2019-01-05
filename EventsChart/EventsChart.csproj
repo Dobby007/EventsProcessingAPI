@@ -63,8 +63,9 @@
     <Compile Include="ChartData\IDataAdapter.cs" />
     <Compile Include="Drawing\IDrawingContext.cs" />
     <Compile Include="Drawing\IFigure.cs" />
+    <Compile Include="Drawing\Line.cs" />
     <Compile Include="Drawing\Polyline.cs" />
-    <Compile Include="Drawing\Rectangular.cs" />
+    <Compile Include="Drawing\Rectangle.cs" />
     <Compile Include="Drawing\StreamGeometryDrawingContext.cs" />
     <Compile Include="TimeUnitFactors.cs" />
     <Compile Include="TimeLine.cs" />
