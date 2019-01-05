@@ -6,7 +6,7 @@ using System.Text;
 
 namespace EventsProcessingAPI
 {
-    public ref struct EventEnumerator
+    public ref struct RealEventEnumerator
     {
         private Span<Bucket> _buckets;
         private readonly int _firstEventIndex;
@@ -14,9 +14,9 @@ namespace EventsProcessingAPI
         private readonly bool _canMove;
         private int _currentBucketIndex;
         private int _currentEventIndex;
-        private EventBucketInfo _currentItem;
+        private RealEvent _currentItem;
 
-        public EventEnumerator(Span<Bucket> buckets, int firstEventIndex, int lastEventIndex)
+        public RealEventEnumerator(Span<Bucket> buckets, int firstEventIndex, int lastEventIndex)
         {
             _buckets = buckets;
             _firstEventIndex = firstEventIndex;
@@ -36,14 +36,21 @@ namespace EventsProcessingAPI
             var result = EnumerationHelper.MoveNext(_buckets, ref _currentBucketIndex, ref _currentEventIndex, _lastEventIndex);
             if (result)
             {
-                _currentItem = new EventBucketInfo(
-                    _buckets[_currentBucketIndex].Events[_currentEventIndex],
-                    _currentBucketIndex,
-                    _currentEventIndex
+                var bucket = _buckets[_currentBucketIndex];
+                var ev = bucket.Events[_currentEventIndex];
+                _currentItem = new RealEvent(
+                    ev.EventType,
+                    bucket.GetAbsoluteTimeForEvent(ev)
                 );
             }
             
             return result;
+        }
+
+
+        private void SetCurrentItem()
+        {
+            
         }
 
 
@@ -53,7 +60,7 @@ namespace EventsProcessingAPI
             _currentEventIndex = _firstEventIndex - 1;
         }
 
-        public EventBucketInfo Current => _currentItem;
+        public RealEvent Current => _currentItem;
 
         public void Dispose()
         {

@@ -16,7 +16,6 @@ namespace EventsProcessingAPI
         {
             return new EventEnumerator(_buckets.Span, _firstEventIndex, _lastEventIndex);
         }
-        
     }
     
 }

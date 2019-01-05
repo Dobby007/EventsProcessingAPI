@@ -1,4 +1,6 @@
-﻿using System;
+﻿using EventsChart.ChartData;
+using EventsChart.Drawing;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -33,15 +35,24 @@ namespace EventsChart
             long start = container.FirstTimestamp + _chartArea.Offset;
             long segmentSize = _chartArea.SegmentSize;
             int height = _chartArea.Height;
-
-            var densities = await Task.Run(() =>
+            
+            var figures = await Task.Run(() =>
             {
                 var stopwatch = Stopwatch.StartNew();
-                double[] result = container.GetDensities(start, start + segmentSize * _chartArea.Width, segmentSize);
+                IDataAdapter dataAdapter = new EventsApiDataAdapter(container)
+                {
+                    ChartHeight = height,
+                    Offset = start
+                };
+                
+                var figuresToDraw = dataAdapter.GetFiguresToDraw(start, start + segmentSize * _chartArea.Width, segmentSize);
+                //double[] result = container.GetDensities(start, start + segmentSize * _chartArea.Width, segmentSize);
                 stopwatch.Stop();
                 Debug.WriteLine("Densities were calculated for {0}ms", stopwatch.ElapsedMilliseconds);
-                return result;
+                return figuresToDraw;
             });
+
+            
 
             var stopwatch1 = Stopwatch.StartNew();
             if (_path == null)
@@ -54,7 +65,23 @@ namespace EventsChart
                 };
                 _chartArea.AddToView(_path);
             }
-            var geometry = new PathGeometry(new[] { CreatePathFigure(densities, height) });
+
+            /*figures = new[]
+            {
+                //new Drawing.Polyline(new Point(1, height), new[] { new Point(1, 0), new Point(4, 0), new Point(4, 10), new Point(5, 0), new Point(5, height) }),
+                new Drawing.Polyline(new Point(14, 251), new[] { new Point(15, 251), new Point(15, 0), new Point(16, 0), new Point(16, 239), new Point(17, 239) }),
+            };*/
+
+            StreamGeometryDrawingContext context;
+            using (context = new StreamGeometryDrawingContext())
+            {
+                foreach (var figure in figures)
+                {
+                    figure.Draw(context);
+                }
+            }
+
+            var geometry = context.Geometry;
             geometry.Freeze();
             _path.Data = geometry;
             
@@ -62,6 +89,7 @@ namespace EventsChart
             Debug.WriteLine("Canvas was repainted in {0}ms", stopwatch1.ElapsedMilliseconds);
         }
 
+        /*
         private PathFigure CreatePathFigure(double[] densities, double height)
         {
             if (densities.Length < 1)
@@ -91,7 +119,6 @@ namespace EventsChart
             var figure = new PathFigure(startPoint, new[] { segment }, true);
 
             return figure;
-
-        }
+        }*/
     }
 }

@@ -12,7 +12,7 @@ namespace EventsChart
         private readonly Visualizer _visualizer;
         private readonly IChartArea _chartArea;
 
-        public ChartUpdater(TimeSpan frequency, IChartArea chartArea)
+        public ChartUpdater(IChartArea chartArea)
         {
             _chartArea = chartArea;
             _visualizer = new Visualizer(chartArea);

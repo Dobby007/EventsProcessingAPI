@@ -4,14 +4,14 @@ using System.Collections.Generic;
 
 namespace EventsProcessingAPI
 {
-    public class AbstractEventEnumerable
+    public abstract class AbstractEventEnumerable
     {
         protected Memory<Bucket> _buckets;
         protected readonly int _firstEventIndex;
         protected readonly int _lastEventIndex;
         public ReadOnlySpan<Bucket> Buckets => _buckets.Span;
 
-        public AbstractEventEnumerable(Memory<Bucket> buckets, int firstEventIndex, int lastEventIndex)
+        protected AbstractEventEnumerable(Memory<Bucket> buckets, int firstEventIndex, int lastEventIndex)
         {
             _buckets = buckets;
             _firstEventIndex = firstEventIndex;

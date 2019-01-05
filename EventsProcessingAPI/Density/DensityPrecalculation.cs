@@ -2,9 +2,9 @@
 using EventsDomain;
 using EventsProcessingAPI.Common;
 using EventsProcessingAPI.Common.Pipeline;
+using EventsProcessingAPI.Ranges;
 using System;
 using System.Runtime.CompilerServices;
-using static EventsProcessingAPI.Ranges.RangeSelector;
 
 namespace EventsProcessingAPI.Density
 {

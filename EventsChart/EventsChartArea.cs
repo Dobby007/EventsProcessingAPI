@@ -24,17 +24,10 @@ namespace EventsChart
             };
             Content = Canvas;
 
-            _chartUpdater = new ChartUpdater(TimeSpan.FromMilliseconds(1), this);
+            _chartUpdater = new ChartUpdater(this);
 
             SizeChanged += OnSizeChanged;
             Loaded += OnLoaded;
-        }
-
-        private async void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            InitChart();
-            
-            await UpdateChart();
         }
 
         #region Properties
@@ -71,6 +64,14 @@ namespace EventsChart
         int IChartArea.Height => (int)ActualHeight;
         #endregion
 
+        #region Events
+        private async void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            InitChart();
+            
+            await UpdateChart();
+        }
+
         private async void OnSizeChanged(object sender, SizeChangedEventArgs args)
         {
             if (!IsLoaded)
@@ -80,7 +81,13 @@ namespace EventsChart
             await UpdateChart();
         }
 
-
+        private static async void OnBucketContainerChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        {
+            var wpfChart = obj as EventsChartArea;
+            if (wpfChart == null) return;
+            await wpfChart.UpdateChart();
+        }
+        #endregion
 
         private async Task UpdateChart()
         {
@@ -94,18 +101,10 @@ namespace EventsChart
         {
             Canvas.Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
         }
-        
 
         public void AddToView(FrameworkElement element)
         {
             Canvas.Children.Add(element);
-        }
-
-        private static async void OnBucketContainerChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
-        {
-            var wpfChart = obj as EventsChartArea;
-            if (wpfChart == null) return;
-            await wpfChart.UpdateChart();
         }
 
         private static PropertyChangedCallback GetChartUpdater()

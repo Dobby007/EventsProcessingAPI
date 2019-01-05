@@ -4,7 +4,6 @@ using EventsProcessingAPI.Ranges;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Range = EventsProcessingAPI.Ranges.RangeSelector.Range;
 
 namespace EventsProcessingAPI.Density
 {

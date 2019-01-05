@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -58,6 +59,13 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChartData\EventsApiDataAdapter.cs" />
+    <Compile Include="ChartData\IDataAdapter.cs" />
+    <Compile Include="Drawing\IDrawingContext.cs" />
+    <Compile Include="Drawing\IFigure.cs" />
+    <Compile Include="Drawing\Polyline.cs" />
+    <Compile Include="Drawing\Rectangular.cs" />
+    <Compile Include="Drawing\StreamGeometryDrawingContext.cs" />
     <Compile Include="TimeUnitFactors.cs" />
     <Compile Include="TimeLine.cs" />
     <Compile Include="ChartUpdater.cs" />
