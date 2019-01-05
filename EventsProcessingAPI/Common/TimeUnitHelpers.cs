@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace EventsProcessingAPI.Common
@@ -23,6 +24,12 @@ namespace EventsProcessingAPI.Common
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timeUnit));
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long GetTimeUnitDurationInMicroseconds(this TimeUnit timeUnit)
+        {
+            return GetTimeUnitDuration(timeUnit) / 10;
         }
 
         public static TimeUnit GetCeilingTimeUnit(long segmentSize)
@@ -68,6 +75,36 @@ namespace EventsProcessingAPI.Common
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timeUnit));
             }
+        }
+
+        public static (double Value, TimeUnit Unit) ConvertTicksToTime(long ticks)
+        {
+            TimeUnit optimalTimeUnit = GetFloorTimeUnit(ticks);
+            double time = ticks / (double)optimalTimeUnit.GetTimeUnitDuration();
+            return (time, optimalTimeUnit);
+        }
+
+        public static bool TryGetNextTimeUnit(TimeUnit unit, out TimeUnit nextTimeUnit)
+        {
+            if (unit == TimeUnit.Hour)
+            {
+                nextTimeUnit = default;
+                return false;
+            }
+
+            nextTimeUnit = (TimeUnit)((byte)unit << 1);
+            return true;
+
+        }
+
+        public static IEnumerable<TimeUnit> GetAllTimeUnits()
+        {
+            TimeUnit current = TimeUnit.Microsecond;
+            do
+            {
+                yield return current;
+            }
+            while ((current = (TimeUnit)((byte)current << 1)) <= TimeUnit.Hour);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace EventsChart
 {
     internal class TimeLine : FrameworkElement
     {
-        private const int LabelIntervalWidth = 50;
+        private const int MinLabelIntervalWidthInPixels = 50;
         private readonly Pen _defaultPen = new Pen(Brushes.Blue, 0.5);
 
         public TimeLine()
@@ -64,33 +64,36 @@ namespace EventsChart
             if (SegmentSize <= 0)
                 return;
 
-            int width = (int)ActualWidth;
-            var segmentSize = SegmentSize;
-            bool disableExtendedLabels = false;
-            long labelIntervalDuration = segmentSize * LabelIntervalWidth;
-            if (TimeUnitHelpers.GetCeilingTimeUnit(labelIntervalDuration).GetTimeUnitDuration() % labelIntervalDuration != 0)
-                disableExtendedLabels = true;
+            long segmentSize = SegmentSize;
+            long minLabelIntervalDuration = segmentSize * MinLabelIntervalWidthInPixels;
+            (double Value, TimeUnit Unit) minIntervalDurationInUnits = TimeUnitHelpers.ConvertTicksToTime(minLabelIntervalDuration);
+            if (!TimeUnitFactors.TryGetBestTimeFactor(minIntervalDurationInUnits.Value, minIntervalDurationInUnits.Unit, out double factor))
+                return;
+            
+            double labelIntervalWidth = factor * MinLabelIntervalWidthInPixels / minIntervalDurationInUnits.Value;
+            long labelIntervalDuration = (long)factor * minIntervalDurationInUnits.Unit.GetTimeUnitDuration();
+            TimeUnit labelIntervalUnit = TimeUnitHelpers.GetFloorTimeUnit(labelIntervalDuration);
+
+            int areaWidth = (int)ActualWidth;
 
             long start = Offset;
-            long end = start + segmentSize * width;
+            long end = start + segmentSize * areaWidth;
             
             int labelCount = (byte)((end - start) / (double)labelIntervalDuration);
-            TimeUnit displayedTimeUnit = !disableExtendedLabels 
-                ? TimeUnitHelpers.GetFloorTimeUnit(segmentSize) 
-                : TimeUnitHelpers.GetCeilingTimeUnit(segmentSize);
 
             long firstLabelTime = start - start % labelIntervalDuration;
-            double firstLabelPosition = -(start % labelIntervalDuration) / (double)labelIntervalDuration * LabelIntervalWidth;
+            double firstLabelPosition = -(start % labelIntervalDuration) / (double)labelIntervalDuration * labelIntervalWidth;
             for (var i = 0; i < labelCount + 2; i++)
             {
                 long labelTime = firstLabelTime + i * labelIntervalDuration;
                 if (labelTime < 0)
                     continue;
-                double posX = firstLabelPosition + i * LabelIntervalWidth;
-                var label = new FormattedText(GetDisplayedText(labelTime, displayedTimeUnit), CultureInfo.CurrentCulture,
+                double posX = firstLabelPosition + i * labelIntervalWidth;
+                /*var label = new FormattedText(GetDisplayedText(labelTime, labelIntervalUnit), CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight, new Typeface("Courier new"), 11, Brushes.Blue, 1.25);
-
-                drawingContext.DrawText(label, new Point(posX + 3, 0));
+                    */
+                //drawingContext.DrawText(label, new Point(posX + 3, 0));
+                drawingContext.DrawGlyphRun(Brushes.Blue, CreateGlyphRun(GetDisplayedText(labelTime, labelIntervalUnit), 11, new Point(posX + 3, ActualHeight)));
                 drawingContext.DrawLine(_defaultPen, new Point(posX, 0), new Point(posX, ActualHeight));
             }
             
@@ -103,19 +106,60 @@ namespace EventsChart
             if (labelTime == 0)
                 return "0";
 
+            
+            TimeUnit bestTimeUnit, currentTimeUnit = minTimeUnit;
+            long bestTimeUnitDuration, currentDuration = minTimeUnit.GetTimeUnitDuration();
 
-            var bestTimeUnit = TimeUnit.Hour;
-            long bestTimeUnitDuration;
-            while (labelTime % (bestTimeUnitDuration = bestTimeUnit.GetTimeUnitDuration()) > 0 && bestTimeUnit > minTimeUnit)
-                bestTimeUnit = (TimeUnit)((byte)bestTimeUnit >> 1);
+            do
+            {
+                bestTimeUnitDuration = currentDuration;
+                bestTimeUnit = currentTimeUnit;
+                currentTimeUnit = (TimeUnit)((byte)currentTimeUnit << 1);
+            }
+            while (labelTime % (currentDuration = currentTimeUnit.GetTimeUnitDuration()) == 0);
 
-            if (labelTime / (double)bestTimeUnitDuration < 1)
-                return "";
+            
 
-            if (bestTimeUnitDuration == 1)
-                return $"{labelTime % 1000}{bestTimeUnit.GetTimeUnitAsString()}";
+            return $"{labelTime % currentDuration / bestTimeUnitDuration}{bestTimeUnit.GetTimeUnitAsString()}";
+        }
 
-            return $"{labelTime / bestTimeUnitDuration % bestTimeUnitDuration}{bestTimeUnit.GetTimeUnitAsString()}";
+
+        private static Dictionary<ushort, double> _glyphWidths = new Dictionary<ushort, double>();
+        private static GlyphTypeface _glyphTypeface;
+        public static GlyphRun CreateGlyphRun(string text, double size, Point position)
+        {
+            if (_glyphTypeface == null)
+            {
+                Typeface typeface = new Typeface("Courier new");
+                if (!typeface.TryGetGlyphTypeface(out _glyphTypeface))
+                    throw new InvalidOperationException("No glyphtypeface found");
+            }
+
+            ushort[] glyphIndexes = new ushort[text.Length];
+            double[] advanceWidths = new double[text.Length];
+
+            var totalWidth = 0d;
+            double glyphWidth;
+
+            for (int n = 0; n < text.Length; n++)
+            {
+                ushort glyphIndex = (ushort)(text[n] - 29);
+                glyphIndexes[n] = glyphIndex;
+
+                if (!_glyphWidths.TryGetValue(glyphIndex, out glyphWidth))
+                {
+                    glyphWidth = _glyphTypeface.AdvanceWidths[glyphIndex] * size;
+                    _glyphWidths.Add(glyphIndex, glyphWidth);
+                }
+                advanceWidths[n] = glyphWidth;
+                totalWidth += glyphWidth;
+            }
+
+            var offsetPosition = new Point(position.X - (totalWidth / 2), position.Y - 10 - size);
+
+            GlyphRun glyphRun = new GlyphRun(_glyphTypeface, 0, false, size, 1.25F, glyphIndexes, offsetPosition, advanceWidths, null, null, null, null, null, null);
+
+            return glyphRun;
         }
     }
 }

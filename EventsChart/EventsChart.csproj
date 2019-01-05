@@ -58,6 +58,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TimeUnitFactors.cs" />
     <Compile Include="TimeLine.cs" />
     <Compile Include="ChartUpdater.cs" />
     <Compile Include="EventsChart.xaml.cs">
