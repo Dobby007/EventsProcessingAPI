@@ -15,6 +15,10 @@ namespace EventsChart
         private const int MinLabelIntervalWidthInPixels = 50;
         private readonly Pen _defaultPen = new Pen(Brushes.Blue, 0.5);
 
+        private double LabelIntervalWidth;
+        private long LabelIntervalDuration;
+        private TimeUnit LabelIntervalUnit;
+
         public TimeLine()
         {
             _defaultPen.Freeze();
@@ -24,19 +28,10 @@ namespace EventsChart
             };
         }
 
-        private static PropertyChangedCallback Redraw()
-        {
-            return (o, args) =>
-            {
-                if (o is TimeLine timeLine)
-                {
-                    timeLine.InvalidateVisual();
-                }
-            };
-        }
+        
 
         public static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
-            nameof(SegmentSize), typeof(long), typeof(TimeLine), new PropertyMetadata(-1L, Redraw()));
+            nameof(SegmentSize), typeof(long), typeof(TimeLine), new PropertyMetadata(-1L, OnSegmentSizeChanged));
 
         public long SegmentSize
         {
@@ -45,7 +40,7 @@ namespace EventsChart
         }
 
         public static readonly DependencyProperty OffsetProperty = DependencyProperty.Register(
-            nameof(Offset), typeof(long), typeof(TimeLine), new PropertyMetadata(0L, Redraw()));
+            nameof(Offset), typeof(long), typeof(TimeLine), new PropertyMetadata(0L, OnOffsetChanged));
 
         public long Offset
         {
@@ -53,27 +48,50 @@ namespace EventsChart
             set { SetValue(OffsetProperty, value); }
         }
 
+        private static void OnSegmentSizeChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        {
+            if (obj is TimeLine timeLine)
+            {
+                timeLine.SetLabelIntervalParameters();
+                timeLine.InvalidateVisual();
+            }
+        }
+
+        private static void OnOffsetChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        {
+            if (obj is TimeLine timeLine)
+            {
+                timeLine.InvalidateVisual();
+            }
+        }
 
         
+        private void SetLabelIntervalParameters()
+        {
+            long segmentSize = SegmentSize;
+            long minLabelIntervalDuration = segmentSize * MinLabelIntervalWidthInPixels;
+            (double Value, TimeUnit Unit) minIntervalDurationInUnits = TimeUnitHelpers.ConvertTicksToTime(minLabelIntervalDuration);
+            if (!TimeUnitFactors.TryGetBestTimeFactor(minIntervalDurationInUnits.Value, minIntervalDurationInUnits.Unit, out double factor))
+                return;
+
+            LabelIntervalWidth = factor * MinLabelIntervalWidthInPixels / minIntervalDurationInUnits.Value;
+            LabelIntervalDuration = (long)factor * minIntervalDurationInUnits.Unit.GetTimeUnitDuration();
+            LabelIntervalUnit = TimeUnitHelpers.GetFloorTimeUnit(LabelIntervalDuration);
+        }
 
 
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
 
-            if (SegmentSize <= 0)
-                return;
-
             long segmentSize = SegmentSize;
-            long minLabelIntervalDuration = segmentSize * MinLabelIntervalWidthInPixels;
-            (double Value, TimeUnit Unit) minIntervalDurationInUnits = TimeUnitHelpers.ConvertTicksToTime(minLabelIntervalDuration);
-            if (!TimeUnitFactors.TryGetBestTimeFactor(minIntervalDurationInUnits.Value, minIntervalDurationInUnits.Unit, out double factor))
+            double labelIntervalWidth = LabelIntervalWidth;
+            long labelIntervalDuration = LabelIntervalDuration;
+            TimeUnit labelIntervalUnit = LabelIntervalUnit;
+
+            if (segmentSize <= 0)
                 return;
             
-            double labelIntervalWidth = factor * MinLabelIntervalWidthInPixels / minIntervalDurationInUnits.Value;
-            long labelIntervalDuration = (long)factor * minIntervalDurationInUnits.Unit.GetTimeUnitDuration();
-            TimeUnit labelIntervalUnit = TimeUnitHelpers.GetFloorTimeUnit(labelIntervalDuration);
-
             int areaWidth = (int)ActualWidth;
 
             long start = Offset;
