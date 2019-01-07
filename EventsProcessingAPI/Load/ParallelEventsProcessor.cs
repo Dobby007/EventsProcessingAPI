@@ -1,14 +1,14 @@
 ﻿using EventsDomain;
 using EventsProcessingAPI.Common;
 using EventsProcessingAPI.Common.Pipeline;
+using EventsProcessingAPI.DataRead;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EventsProcessingAPI.Load
 {
-    class ParallelEventsProcessor : IEventsProcessor
+    internal class ParallelEventsProcessor : IEventsProcessor
     {
         private readonly IProgress<int> _progressHandler;
         private readonly IProcess _eventProcessor;

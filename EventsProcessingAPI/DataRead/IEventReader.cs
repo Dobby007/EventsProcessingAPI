@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using EventsDomain;
 
-namespace EventsProcessingAPI
+namespace EventsProcessingAPI.DataRead
 {
     public interface IEventReader : IDisposable
     {

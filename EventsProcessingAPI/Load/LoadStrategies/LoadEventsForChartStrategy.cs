@@ -1,5 +1,5 @@
-﻿
-using EventsProcessingAPI.Common.Pipeline;
+﻿using EventsProcessingAPI.Common.Pipeline;
+using EventsProcessingAPI.DataRead;
 using EventsProcessingAPI.Density;
 using System;
 using System.Threading.Tasks;

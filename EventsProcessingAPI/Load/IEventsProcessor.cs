@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using EventsProcessingAPI.DataRead;
+using System.Threading.Tasks;
 
 namespace EventsProcessingAPI.Load
 {
-    interface IEventsProcessor
+    public interface IEventsProcessor
     {
         Task<BucketContainer> ProcessEventsAsync(IEventReader reader, bool enablePayloads);
     }

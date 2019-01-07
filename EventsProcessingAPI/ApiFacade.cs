@@ -1,4 +1,5 @@
-﻿using EventsProcessingAPI.Load.LoadStrategies;
+﻿using EventsProcessingAPI.DataRead;
+using EventsProcessingAPI.Load.LoadStrategies;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace EventsProcessingAPI
         public async Task<BucketContainer> LoadEventsFromFileAsync(string filePath, LoadStrategyType loadStrategyType)
         {
             var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            using (var loadStrategy = GetLoadStrategy(loadStrategyType, new EventReader(fs)))
+            using (var loadStrategy = GetLoadStrategy(loadStrategyType, new EventReader(fs, new BucketBuilder())))
             {
                 loadStrategy.ProgressHandler = ProgressHandler;
                 return await loadStrategy.LoadEventsAsync();
@@ -21,7 +22,7 @@ namespace EventsProcessingAPI
 
         public async Task<BucketContainer> LoadEventsFromStreamAsync(Stream stream, LoadStrategyType loadStrategyType)
         {
-            using (var loadStrategy = GetLoadStrategy(loadStrategyType, new EventReader(stream)))
+            using (var loadStrategy = GetLoadStrategy(loadStrategyType, new EventReader(stream, new BucketBuilder())))
             {
                 loadStrategy.ProgressHandler = ProgressHandler;
                 return await loadStrategy.LoadEventsAsync();
