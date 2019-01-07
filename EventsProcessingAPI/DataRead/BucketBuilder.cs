@@ -48,8 +48,9 @@ namespace EventsProcessingAPI.DataRead
         public void AddEvent(in RealEvent ev)
         {
             uint bucketEventTime = checked((uint)(ev.Ticks % Bucket.MaxBucketEventTime));
-            _eventsBuffer[_bucketSize++] = new Event(ev.EventType, bucketEventTime);
+            _eventsBuffer[_bucketSize] = new Event(ev.EventType, bucketEventTime);
             EnsureEventOrderIsCorrect();
+            _bucketSize++;
         }
 
         public void AddEventWithPayload(in RealEvent ev, in Payload payload)
@@ -57,8 +58,8 @@ namespace EventsProcessingAPI.DataRead
             uint bucketEventTime = checked((uint)(ev.Ticks % Bucket.MaxBucketEventTime));
             _eventsBuffer[_bucketSize] = new Event(ev.EventType, bucketEventTime);
             _payloadsBuffer[_bucketSize] = payload;
-            _bucketSize++;
             EnsureEventOrderIsCorrect();
+            _bucketSize++;
         }
 
         partial void EnsureEventOrderIsCorrect();

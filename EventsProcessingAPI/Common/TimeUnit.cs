@@ -6,10 +6,11 @@ namespace EventsProcessingAPI.Common
 {
     public enum TimeUnit : byte
     {
-        Microsecond = 1,
-        Millisecond = 2,
-        Second = 4,
-        Minute = 8,
-        Hour = 16
+        CpuTick = 1,
+        Microsecond = 2,
+        Millisecond = 4,
+        Second = 8,
+        Minute = 16,
+        Hour = 32
     }
 }

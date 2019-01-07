@@ -32,6 +32,10 @@ namespace EventsProcessingAPI.Density
                 end = maxTime;
             }
 
+            // Start time is out of range
+            if (end < start)
+                return Array.Empty<double>();
+
             ushort totalSegments = 0;
             try
             {
