@@ -86,7 +86,7 @@ namespace EventsProcessingAPI.DataRead
                     long eventTime = _reader.ReadInt64();
 
                     // The current event time must be greater than the previous one, othewise a file is corrupted
-                    if (eventTime < lastEventTime)
+                    if (eventTime <= lastEventTime)
                         throw new BadEventSourceException("File is corrupted. Events are not sorted in ascending order.");
                     
                     // The following condition is true only for the first iteration
@@ -119,7 +119,7 @@ namespace EventsProcessingAPI.DataRead
                         continue;
 
                     // We don't need payloads if user does not want to know anything about them
-                    if (enablePayload)
+                    if (!enablePayload)
                         _builder.AddEvent(new RealEvent(eventType, eventTime));
                     else
                         _builder.AddEventWithPayload(new RealEvent(eventType, eventTime), new Payload(first, second, third, fourth));

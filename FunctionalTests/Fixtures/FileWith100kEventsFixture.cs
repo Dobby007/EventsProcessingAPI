@@ -1,6 +1,7 @@
 ﻿using RandomDataGenerator;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime;
 using System.Text;
@@ -15,11 +16,12 @@ namespace FunctionalTests.Fixtures
         {
             if (File.Exists(FileName))
                 return;
-
-            GCSettings.LatencyMode = GCLatencyMode.Batch;
-            var generator = new Generator(FileName, TimeSpan.Parse("00:00:30"));
-            generator.GenerateFile(100_000);
             
+            
+            var generator = new FakeDataGenerator(FileName);
+            generator.GenerateFile(100_000);
+
+
         }
     }
 }

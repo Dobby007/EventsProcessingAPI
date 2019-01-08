@@ -40,10 +40,10 @@ namespace UnitTests.Tests
 
             builder.AddEvent(new RealEvent(EventType.Start, eventTime));
 
-            var bucket = builder.Build(false);
+            var bucket = builder.Build(false, false);
             Assert.Equal(expectedBucketOffset, bucket.Offset);
 
-            bucket = builder.Build(true);
+            bucket = builder.Build(true, false);
             Assert.Equal(expectedBucketOffset, bucket.Offset);
         }
 

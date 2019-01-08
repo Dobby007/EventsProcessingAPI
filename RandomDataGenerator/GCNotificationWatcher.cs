@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
@@ -41,6 +42,7 @@ namespace RandomDataGenerator
         {
             while (_isStarted)
             {
+                
                 // Check for a notification of an approaching collection.
                 GCNotificationStatus s = GC.WaitForFullGCApproach();
 

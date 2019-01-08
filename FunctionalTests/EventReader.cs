@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-namespace SimpleTest
+namespace FunctionalTests
 {
     public class EventReader : IDisposable
     {
@@ -94,7 +94,7 @@ namespace SimpleTest
             }
             catch (EndOfStreamException)
             {
-                progress.Report(100);
+                progress?.Report(100);
             }
             finally
             {

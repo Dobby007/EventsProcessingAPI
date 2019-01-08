@@ -32,9 +32,9 @@ namespace EventsProcessingAPI.Density
 
             var lastBucket = container.GetLastBucket();
             var maxTime = lastBucket.GetAbsoluteTimeForEvent(lastBucket.GetLastEvent());
-            if (end > maxTime)
+            if (end > maxTime + 1)
             {
-                end = maxTime;
+                end = maxTime + 1;
             }
 
             // Start time is out of range
@@ -44,7 +44,7 @@ namespace EventsProcessingAPI.Density
             ushort totalSegments = 0;
             try
             {
-                totalSegments = checked((ushort)Math.Ceiling((end - start) / (double)segmentSize));
+                totalSegments = checked((ushort)Math.Ceiling(Math.Max(end - start - 1, 1) / (double)segmentSize));
             }
             catch (OverflowException)
             {
@@ -93,11 +93,10 @@ namespace EventsProcessingAPI.Density
                 container.Buckets,
                 start,
                 start + leftDensities.Length * segmentSize,
-                container.FirstTimestamp,
                 segmentSize,
                 span,
                 true,
-                out Range processedRange
+                out long processedRange
             );
 
             return densities;
@@ -107,12 +106,12 @@ namespace EventsProcessingAPI.Density
         /// Gets densities for segments with size equal to <paramref name="segmentSize"/>
         /// </summary>
         /// <param name="buckets">Array of buckets</param>
-        /// <param name="start">Start timestamp of the event range we want to find</param>
+        /// <param name="start">Start timestamp of the event range we want to find. If null, then it is a first event time in the first bucket of the buckets array.</param>
         /// <param name="segmentSize">Length/duration of one segment</param>
         /// <param name="finalize">Flag indicating that density should be calculated for the last incomplete segment if there is one</param>
-        /// <param name="processedRange">The range we have processed so far</param>
+        /// <param name="nextBatchStartTime">Next start time</param>
         /// <returns></returns>
-        public static double[] GetDensities(ArraySegment<Bucket> bucketsArray, long? start, long segmentSize, bool finalize, out Range processedRange)
+        public static double[] GetDensities(ArraySegment<Bucket> bucketsArray, long? start, long segmentSize, bool finalize, out long nextBatchStartTime)
         {
             var buckets = bucketsArray.AsSpan();
             if (buckets.Length < 1)
@@ -122,59 +121,57 @@ namespace EventsProcessingAPI.Density
 
             if (!start.HasValue)
                 start = buckets[0].GetAbsoluteTimeForEvent(buckets[0].GetFirstEvent());
-            long end = buckets[buckets.Length - 1].GetAbsoluteTimeForEvent(buckets[buckets.Length - 1].GetLastEvent());
+
+            long end = buckets[buckets.Length - 1].GetAbsoluteTimeForEvent(buckets[buckets.Length - 1].GetLastEvent()) + 1;
 
             ushort totalSegments = 0;
             try
             {
-                totalSegments = checked((ushort)Math.Ceiling((end - start.Value) / (double)segmentSize));
+                if (finalize)
+                    totalSegments = checked((ushort)Math.Ceiling((end - start.Value - 1) / (double)segmentSize));
+                else
+                    totalSegments = checked((ushort)Math.Floor((end - start.Value - 1) / (double)segmentSize));
             }
             catch (OverflowException)
             {
                 throw new ArgumentException("Too small segment size for such a big range", nameof(segmentSize));
             }
 
-            var range = RangeSelector.GetRange(buckets, start.Value, end, start.Value);
-
             var densitiesBuf = new double[totalSegments];
             CalculateDensities(
                 bucketsArray.AsMemory(),
                 start.Value,
                 end,
-                start.Value,
                 segmentSize,
                 densitiesBuf,
                 finalize,
-                out Range relativeProcessedRange
+                out long processedRange
             );
 
-            processedRange = range.FirstBucketIndex == 0
-                ? relativeProcessedRange
-                : relativeProcessedRange.AddOffset(range.FirstBucketIndex);
-
+            nextBatchStartTime = start.Value + processedRange;
+            
             return densitiesBuf;
         }
 
 
         private static void CalculateDensities(
             Memory<Bucket> bucketsArray,
-            long? start,
+            long start,
             long end,
-            long? firstTimestamp,
             long segmentSize,
             Span<double> targetBuffer,
             bool finalize,
-            out Range processedRange
+            out long processedRange
         )
         {
             var buckets = bucketsArray.Span;
-            var range = RangeSelector.GetRange(bucketsArray.Span, start.Value, end, start.Value);
+            var range = RangeSelector.GetRange(bucketsArray.Span, start, end);
             if (!range.IsFound && !range.IsNearestEventFound)
                 throw new RangeNotFoundException();
 
             EventEnumerable events;
             long filled = 0, unfilled = 0;
-            long distance = segmentSize;
+            long distance = 0;
             long lastEventTime = -1, currentEventTime = 0;
             int segmentIndex = 0;
             int eventsCount = 0;
@@ -207,16 +204,10 @@ namespace EventsProcessingAPI.Density
                 if (eventsCount == 0)
                 {
                     firstEvent = ev;
-
-                    // If the first event in the range does not mean the start time by itself
-                    if (start.HasValue)
-                    {
-                        if (start > currentBucket.GetAbsoluteTimeForEvent(firstEvent.Event))
-                            throw new ArgumentException("Start time must be not greater than the first event time in the range", nameof(start));
-
-                        // We can consider event time passed through start parameter as the last event
-                        lastEventTime = start.Value;
-                    }
+                    
+                    // The first event in the range may not mean the start time by itself
+                    // We can consider event time passed through `start` parameter as the first time
+                    lastEventTime = start;
                     lastEventType = (EventType)((byte)~firstEvent.Event.EventType & 1);
                 }
                 
@@ -277,25 +268,26 @@ namespace EventsProcessingAPI.Density
                 // we processed the whole range but some density values remain uncalculated
                 distance = segmentSize;
                 targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
-                processedRange = new Range(firstEvent.BucketIndex, lastEvent.BucketIndex, firstEvent.EventIndex, lastEvent.EventIndex);
 
                 // we need to set densities for segments that we didn't processed due to the lack of the events
                 if (lastEventType == EventType.Start)
                     for (; segmentIndex < targetBuffer.Length; segmentIndex++)
                         targetBuffer[segmentIndex] = 1;
+
+                processedRange = end - start;
             }
             else if (!finalize)
             {
                 // there are some other events to wait for
                 if (segmentIndex == 0)
-                    processedRange = new Range(false); // we have not calculated any densities
+                    processedRange = 0; // we have not calculated any densities
                 else 
-                    processedRange = new Range(firstEvent.BucketIndex, lastAccountedEvent.BucketIndex, firstEvent.EventIndex, lastAccountedEvent.EventIndex);  // we have calculated some densities
+                    processedRange = segmentIndex * segmentSize;  // we have calculated some densities
             }
             else if (filled + unfilled == 0)
             {
                 // we processed the whole range and calculated all the densities
-                processedRange = new Range(firstEvent.BucketIndex, lastEvent.BucketIndex, firstEvent.EventIndex, lastEvent.EventIndex);
+                processedRange = end - start;
             }
             else 
             {

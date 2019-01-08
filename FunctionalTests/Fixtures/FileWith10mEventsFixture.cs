@@ -16,8 +16,7 @@ namespace FunctionalTests.Fixtures
             if (File.Exists(FileName))
                 return;
 
-            GCSettings.LatencyMode = GCLatencyMode.Batch;
-            var generator = new Generator(FileName, TimeSpan.Parse("00:01:00"));
+            var generator = new FakeDataGenerator(FileName);
             generator.GenerateFile(10_000_000);
         }
     }

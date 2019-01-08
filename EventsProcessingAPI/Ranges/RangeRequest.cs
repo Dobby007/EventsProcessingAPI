@@ -10,6 +10,12 @@ namespace EventsProcessingAPI.Ranges
         public readonly long End;
         public readonly long FirstTimeStamp;
 
+        /// <summary>
+        /// Creates request for searching a range of events
+        /// </summary>
+        /// <param name="start">Start time (inclusive)</param>
+        /// <param name="end">Start time (exclusive)</param>
+        /// <param name="firstTimeStamp">First timestamp in buckets array</param>
         public RangeRequest(long start, long end, long firstTimeStamp)
         {
             Start = start;

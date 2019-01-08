@@ -104,7 +104,7 @@ namespace EventsProcessingAPI
 
         public PayloadEnumerable GetPayloads(long start, long end)
         {
-            var range = RangeSelector.GetRange(_buckets, start, end, FirstTimestamp);
+            var range = RangeSelector.GetRange(_buckets, start, end);
             if (!range.IsFound)
                 throw new RangeNotFoundException();
 
@@ -118,7 +118,7 @@ namespace EventsProcessingAPI
 
         public Bucket[] GetBuckets(long start, long end)
         {
-            var range = RangeSelector.GetRange(_buckets, start, end, FirstTimestamp);
+            var range = RangeSelector.GetRange(_buckets, start, end);
             if (!range.IsFound)
                 throw new RangeNotFoundException();
             

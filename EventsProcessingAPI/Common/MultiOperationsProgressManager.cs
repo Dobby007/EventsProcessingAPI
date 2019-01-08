@@ -31,7 +31,7 @@ namespace EventsProcessingAPI.Common
             var totalProgress = _operations.Sum(op => op.Value) / _operations.Count;
             if (_totalProgress > totalProgress)
             {
-                throw new InvalidOperationException("Current total progress is greater than the new one");
+                throw new InvalidOperationException($"Current total progress is greater than the new one: current = {_totalProgress}, new = {totalProgress}");
             }
             _totalProgress = totalProgress;
             _progressHandler?.Report(totalProgress);

@@ -8,24 +8,23 @@ using System.Threading;
 
 namespace RandomDataGenerator
 {
-    class Generator
+    class GcEventsGenerator : DataGenerator
     {
-        private readonly Random _randomizer = new Random();
-        private readonly string _filename;
-        private readonly TimeSpan _interval;
-        private readonly TicksGetter _ticker = new TicksGetter();
-        private readonly ConcurrentQueue<RealEvent> _queue = new ConcurrentQueue<RealEvent>();
         private readonly AutoResetEvent _gcEventsCatched = new AutoResetEvent(false);
         private readonly List<RealEvent> _allEvents = new List<RealEvent>();
         private volatile bool _extrapolationCompleted = false;
+        
+        private readonly TimeSpan _interval;
+        private readonly AllocationMode _allocationMode;
 
-        public Generator(string filename, TimeSpan interval)
+        public GcEventsGenerator(string filename, TimeSpan interval, AllocationMode allocationMode)
+            : base(filename)
         {
-            _filename = filename;
             _interval = interval;
+            _allocationMode = allocationMode;
         }
 
-        public void GenerateFile(int desiredEventsCount, AllocationMode allocationMode)
+        public void GenerateFile(int desiredEventsCount)
         {
             using (var watcher = new GCNotificationWatcher())
             {
@@ -33,7 +32,7 @@ namespace RandomDataGenerator
                 watcher.OnGarbageCollectionEnded += AddStopEvent;
                 watcher.Start();
 
-                var heavyMetal = new ObjectAllocator(allocationMode);
+                var heavyMetal = new ObjectAllocator(_allocationMode);
                 heavyMetal.Start();
 
                 var timer = new Timer(state =>
@@ -101,6 +100,7 @@ namespace RandomDataGenerator
         {
             var ticks = _ticker.Peek();
             var realEvent = new RealEvent(EventType.Start, ticks);
+            
             _queue.Enqueue(realEvent);
             _allEvents.Add(realEvent);
         }
@@ -109,43 +109,14 @@ namespace RandomDataGenerator
         {
             var ticks = _ticker.Peek();
             var realEvent = new RealEvent(EventType.Stop, ticks);
+            
             _queue.Enqueue(realEvent);
             _allEvents.Add(realEvent);
             if (_queue.Count >= 10)
                 _gcEventsCatched.Set();
         }
 
-        private void WriteFile(Func<bool> continueWriting, bool append)
-        {
-            var thread = new Thread(() =>
-            {
-                using (var fileWriter = new FileWriter(_filename, append))
-                {
-                    int writtenEvents = 0;
-                    while (continueWriting() || !_queue.IsEmpty)
-                    {
-                        _gcEventsCatched.WaitOne();
-                        while (_queue.TryDequeue(out RealEvent ev))
-                        {
-                            fileWriter.WriteEvent(
-                                ev,
-                                new Payload(GetRandomNumber(), GetRandomNumber(), GetRandomNumber(), GetRandomNumber())
-                            );
-                            writtenEvents++;
-                        }
-                        Console.Write("\rNumber of events written: {0}", writtenEvents);
-                        
-                    }
-                }
-            });
-            thread.Start();
-            thread.Join();
-        }
-
-        private long GetRandomNumber()
-        {
-            return (long)(_randomizer.NextDouble() * long.MaxValue);
-        }
+        
         
     }
 }

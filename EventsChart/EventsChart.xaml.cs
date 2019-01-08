@@ -19,6 +19,7 @@ namespace EventsChart
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            SizeChanged += OnSizeChanged;
         }
 
         public bool ZoomIn()
@@ -109,27 +110,40 @@ namespace EventsChart
             UpdateScrollInfo();
         }
 
+        private void OnSizeChanged(object sender, SizeChangedEventArgs args)
+        {
+            if (!IsLoaded)
+                return;
+
+            CoerceValue(SegmentSizeProperty);
+
+            SetPrefferedSegmentSizes();
+            UpdateScrollInfo();
+        }
+
         private static void OnBucketContainerChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
+
+            d.CoerceValue(SegmentSizeProperty);
+            d.CoerceValue(OffsetProperty);
+
             if (d is EventsChart chart)
             {
                 var val = args.NewValue as BucketContainer;
                 chart.SetPrefferedSegmentSizes();
                 chart.UpdateScrollInfo();
             }
-
-            d.CoerceValue(OffsetProperty);
-            d.CoerceValue(SegmentSizeProperty);
         }
 
         private static void OnSegmentSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
+            d.CoerceValue(OffsetProperty);
+
             if (d is EventsChart chart)
             {
                 chart.UpdateScrollInfo();
             }
 
-            d.CoerceValue(OffsetProperty);
         }
 
         
@@ -143,10 +157,13 @@ namespace EventsChart
                 if (container == null || offset == -1)
                     return offset;
 
+                long segmentSize = chart.SegmentSize;
+                offset = (long)Math.Ceiling(offset / (double)segmentSize) * segmentSize;
+
                 long lastTimestamp = container.LastTimestamp;
-                long viewportDuration = (long)(chart.ActualWidth * chart.SegmentSize);
+                long viewportDuration = (long)(chart.ActualWidth * segmentSize);
                 long lastPossibleTimestamp = (long)Math.Ceiling((container.LastTimestamp - container.FirstTimestamp) / (double)chart.SegmentSize) 
-                    * chart.SegmentSize;
+                    * segmentSize;
 
                 return Math.Max(Math.Min(offset, lastPossibleTimestamp - viewportDuration), 0);
             }
@@ -163,7 +180,7 @@ namespace EventsChart
                     return current;
 
                 if (chart._prefferedSegmentSizes.Length > 0 && !chart._prefferedSegmentSizes.Contains(current))
-                    return 1L;
+                    return chart._prefferedSegmentSizes[chart._prefferedSegmentSizes.Length - 1];
             }
 
             return current;
@@ -293,7 +310,7 @@ namespace EventsChart
             double segmentSize = Math.Max(SegmentSize, 1);
             Size viewport = new Size(ActualWidth, 1);
             Size extent = new Size(Math.Ceiling((end - start) / segmentSize), 1);
-            Point scrollOffset = new Point(Math.Max((Offset - start) / segmentSize, 0), 0);
+            Point scrollOffset = new Point(Math.Max(Offset / segmentSize, 0), 0);
 
             _extent = extent;
             _viewport = viewport;

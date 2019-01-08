@@ -8,6 +8,9 @@ namespace EventsProcessingAPI.Density
 {
     internal class DensityHintContainer
     {
+        public const TimeUnit MinHintTimeUnit = TimeUnit.Second;
+        public const TimeUnit MaxHintTimeUnit = TimeUnit.Minute;
+
         // Max period = 49 days
         private readonly TreeDictionary<uint, double> _seconds;
 

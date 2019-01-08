@@ -8,28 +8,38 @@ namespace EventsProcessingAPI.Ranges
 {
     public static class RangeSelector
     {
+        /// <summary>
+        /// Gets range of events
+        /// </summary>
+        /// <param name="buckets">Buckets</param>
+        /// <param name="rangeRequest">Request for a range</param>
+        /// <returns></returns>
         public static Range GetRange(in ReadOnlySpan<Bucket> buckets, in RangeRequest rangeRequest)
         {
-            return GetRange(buckets, rangeRequest.Start, rangeRequest.End, rangeRequest.FirstTimeStamp);
+            return GetRange(buckets, rangeRequest.Start, rangeRequest.End);
         }
 
-        public static Range GetRange(in ReadOnlySpan<Bucket> buckets, long start, long end, long firstTimeStamp)
+        /// <summary>
+        /// Gets range of events
+        /// </summary>
+        /// <param name="buckets">Buckets</param>
+        /// <param name="start">Start time (inclusive)</param>
+        /// <param name="end">Start time (exclusive)</param>
+        /// <returns></returns>
+        public static Range GetRange(in ReadOnlySpan<Bucket> buckets, long start, long end)
         {
             if (buckets.Length < 1)
             {
                 return new Range(false);
             }
 
-            if (start < firstTimeStamp)
-                start = firstTimeStamp;
-
-            if (end < firstTimeStamp || end < start)
+            if (end <= start)
                 throw new ArgumentException(nameof(end));
 
             try
             {
                 var lowerBound = GetBound(buckets, start, false);
-                var upperBound = GetBound(buckets, end, true);
+                var upperBound = GetBound(buckets, end - 1, true);
 
                 if (
                     upperBound.bucketIndex > lowerBound.bucketIndex ||

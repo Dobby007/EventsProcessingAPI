@@ -12,10 +12,12 @@ namespace UnitTests.Fixtures
     public class SampleEventsFixture
     {
         public BucketContainer SampleEvents1 { get; }
+        public BucketContainer SampleEvents2 { get; }
 
         public SampleEventsFixture()
         {
             SampleEvents1 = CreateSampleEventsSet(0);
+            SampleEvents2 = CreateSampleEventsSet2(0);
         }
 
         private BucketContainer CreateSampleEventsSet(long offset)
@@ -58,20 +60,41 @@ namespace UnitTests.Fixtures
             return CreateBucketContainer(events, offset);
         }
 
+        private BucketContainer CreateSampleEventsSet2(long offset)
+        {
+            var events = new[]
+            {
+                // 0 - 20
+                new EventPair(offset + 0, 7, TimeUnit.CpuTick),
+                new EventPair(4, 3, TimeUnit.CpuTick),
+                new EventPair(3, 3, TimeUnit.CpuTick),
+            };
+
+            return CreateBucketContainer(events, offset);
+        }
+
 
         private BucketContainer CreateBucketContainer(EventPair[] eventPairs, long offset)
         {
             var buckets = new List<Bucket>();
             var builder = new BucketBuilder();
             long previousEventTime = offset;
+            
             foreach (var pair in eventPairs)
             {
                 long startEventTime = pair.IsAbsoluteOffset ? offset + pair.Offset : previousEventTime + pair.Offset;
                 var startEvent = new RealEvent(EventType.Start, startEventTime);
                 var stopEvent = new RealEvent(EventType.Stop, startEventTime + pair.Duration * pair.DurationTimeUnit.GetTimeUnitDuration());
-
                 
-                builder.StartNewBucket(offset);
+
+                if (!builder.IsFitIntoCurrentBucket(startEvent.Ticks))
+                {
+                    if (builder.HasEvents)
+                        buckets.Add(builder.Build(false));
+
+                    builder.StartNewBucket(startEvent.Ticks);
+                }
+
                 builder.AddEvent(startEvent);
                 
                 if (!builder.IsFitIntoCurrentBucket(stopEvent.Ticks))
@@ -88,7 +111,7 @@ namespace UnitTests.Fixtures
             if (bucket != null)
                 buckets.Add(bucket);
 
-            return new BucketContainer(buckets.ToArray(), offset);
+            return new BucketContainer(buckets.ToArray(), 0);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace PerfomanceTest
 
             Bucket lastBucket = container.GetLastBucket();
             long startTimestamp = container.FirstTimestamp,
-                 endTimestamp = lastBucket?.GetAbsoluteTimeForEvent(lastBucket.GetLastEvent()) ?? 0;
+                 endTimestamp = (lastBucket?.GetAbsoluteTimeForEvent(lastBucket.GetLastEvent()) ?? 0) + 1;
 
             
             RunPerfomanceTests(

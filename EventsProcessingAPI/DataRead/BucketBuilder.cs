@@ -27,7 +27,7 @@ namespace EventsProcessingAPI.DataRead
             return _bucketOffset >= 0 && eventTime / Bucket.MaxBucketEventTime == _bucketOffset;
         }
 
-        public Bucket Build(bool withPayloads)
+        public Bucket Build(bool withPayloads, bool reset = true)
         {
             if (_bucketOffset < 0)
                 throw new InvalidOperationException("Bucket should initialized first");
@@ -35,6 +35,7 @@ namespace EventsProcessingAPI.DataRead
             if (_bucketSize == 0)
                 return null;
             
+            long offset = _bucketOffset;
             var eventsInBucket = new Event[_bucketSize];
             Array.Copy(_eventsBuffer, eventsInBucket, _bucketSize);
             Payload[] payloadsInBucket = null;
@@ -45,7 +46,10 @@ namespace EventsProcessingAPI.DataRead
                 Array.Copy(_payloadsBuffer, payloadsInBucket, _bucketSize);
             }
 
-            return new Bucket(_bucketOffset, eventsInBucket, payloadsInBucket);
+            if (reset)
+                Reset();
+
+            return new Bucket(offset, eventsInBucket, payloadsInBucket);
         }
 
         public void AddEvent(in RealEvent ev)
@@ -63,6 +67,12 @@ namespace EventsProcessingAPI.DataRead
             _payloadsBuffer[_bucketSize] = payload;
             EnsureEventOrderIsCorrect();
             _bucketSize++;
+        }
+
+        private void Reset()
+        {
+            _bucketSize = 0;
+            _bucketOffset = -1;
         }
 
         partial void EnsureEventOrderIsCorrect();

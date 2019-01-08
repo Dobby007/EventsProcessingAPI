@@ -25,8 +25,10 @@ namespace EventsChartExample
         public MainWindow()
         {
             InitializeComponent();
-
+            this.Dispatcher.UnhandledException += Dispatcher_UnhandledException;
         }
+
+       
 
         private void SelectFileBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -46,20 +48,29 @@ namespace EventsChartExample
 
         private async void LoadBtn_Click(object sender, RoutedEventArgs e)
         {
-            var apiFacade = new ApiFacade();
-            apiFacade.ProgressHandler = new Progress<int>(val =>
+            try
             {
-                LoadProgress.Value = val;
-            });
-            LoadProgress.Visibility = Visibility.Visible;
-            LoadBtn.IsEnabled = false;
+                var apiFacade = new ApiFacade();
+                apiFacade.ProgressHandler = new Progress<int>(val =>
+                {
+                    LoadProgress.Value = val;
+                });
+                LoadProgress.Visibility = Visibility.Visible;
+                LoadBtn.IsEnabled = false;
 
-            var bucketContainer = await apiFacade.LoadEventsFromFileAsync(SelectiFilePath.Text, LoadStrategyType.LoadEventsForChart);
+                var bucketContainer = await apiFacade.LoadEventsFromFileAsync(SelectiFilePath.Text, LoadStrategyType.LoadEventsForChart);
 
-            var chartWindow = new ChartWindow(bucketContainer);
-            chartWindow.Owner = this;
-            Visibility = Visibility.Hidden;
-            chartWindow.ShowDialog();
+                var chartWindow = new ChartWindow(bucketContainer);
+                chartWindow.Owner = this;
+                Visibility = Visibility.Hidden;
+            
+                chartWindow.ShowDialog();
+            }
+            catch (Exception exc)
+            {
+                ShorExceptionMessageBox(exc);
+            }
+
             Visibility = Visibility.Visible;
             ResetControls();
 
@@ -70,6 +81,21 @@ namespace EventsChartExample
             LoadBtn.IsEnabled = true;
             LoadProgress.Visibility = Visibility.Collapsed;
             LoadProgress.Value = 0;
+
+        }
+
+        private void Dispatcher_UnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            ShorExceptionMessageBox(e.Exception);
+            Visibility = Visibility.Visible;
+            ResetControls();
+            e.Handled = true;
+        }
+
+        private void ShorExceptionMessageBox(Exception exc)
+        {
+            string errorMessage = string.Format("An unhandled exception occurred: {0}", exc.ToString());
+            MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
         }
 

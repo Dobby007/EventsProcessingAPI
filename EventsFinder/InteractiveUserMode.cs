@@ -32,7 +32,7 @@ namespace EventUtility
                     break;
 
                 long start = long.Parse(matches.Groups[1].Value) * 10;
-                long end = long.Parse(matches.Groups[2].Value) * 10 + 9;
+                long end = (long.Parse(matches.Groups[2].Value) + 1) * 10;
 
                 Console.WriteLine("Your range length is {0:0.00}s.\n", (end - start) / (double)10000000);
                 switch (InteractiveModeType)

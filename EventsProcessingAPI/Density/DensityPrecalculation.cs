@@ -59,10 +59,9 @@ namespace EventsProcessingAPI.Density
                     GetStartTime(buckets, TimeUnit.Second),
                     segmentSize,
                     isCompleted,
-                    out Range processedRange);
+                    out long nextBatchStartTime);
 
-                if (processedRange.IsFound)
-                    _lastProcessedAbsoluteTime1 = buckets[processedRange.LastBucketIndex].GetAbsoluteTimeForEvent(processedRange.LastEventIndex);
+                _lastProcessedAbsoluteTime1 = nextBatchStartTime;
                 AddDensityHints(densities, TimeUnit.Second, segmentSize);
             }
 
@@ -74,12 +73,10 @@ namespace EventsProcessingAPI.Density
                     GetStartTime(buckets, TimeUnit.Minute),
                     segmentSize,
                     isCompleted,
-                    out Range processedRange);
+                    out long nextBatchStartTime);
 
-                if (processedRange.IsFound)
-                    _lastProcessedAbsoluteTime2 = buckets[processedRange.LastBucketIndex].GetAbsoluteTimeForEvent(processedRange.LastEventIndex);
+                _lastProcessedAbsoluteTime2 = nextBatchStartTime;
                 AddDensityHints(densities, TimeUnit.Minute, segmentSize);
-
             }
         }
 
@@ -102,10 +99,10 @@ namespace EventsProcessingAPI.Density
             switch (timeUnit)
             {
                 case TimeUnit.Second:
-                    return _lastProcessedAbsoluteTime1.HasValue ? _lastProcessedAbsoluteTime1 + 1 : null;
+                    return _lastProcessedAbsoluteTime1;
 
                 case TimeUnit.Minute:
-                    return _lastProcessedAbsoluteTime2.HasValue ? _lastProcessedAbsoluteTime2 + 1 : null;
+                    return _lastProcessedAbsoluteTime2;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timeUnit));
