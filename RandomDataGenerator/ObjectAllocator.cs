@@ -16,14 +16,24 @@ namespace RandomDataGenerator
         private Thread _watcherThread;
         private ConcurrentBag<string> _reversedStrings = new ConcurrentBag<string>();
         private CancellationTokenSource _cancellationTokenSource;
+        private readonly AllocationMode _allocationMode;
 
         public bool IsRunning => !(_cancellationTokenSource?.IsCancellationRequested ?? true);
+        public bool AllocationCompleted { get; private set; }
+
+
+        public ObjectAllocator(AllocationMode allocationMode)
+        {
+            _allocationMode = allocationMode;
+        }
+
 
         public void Start()
         {
             if (IsRunning)
                 return;
 
+            AllocationCompleted = false;
             _cancellationTokenSource = new CancellationTokenSource();
             _watcherThread = new Thread(StartAllocation);
             _watcherThread.IsBackground = true;
@@ -47,7 +57,14 @@ namespace RandomDataGenerator
                 {
                     try
                     {
-                        using (var writer = new StreamWriter(new FileStream("out" + index + ".txt", FileMode.Create, FileAccess.Write)))
+                        if (token.IsCancellationRequested)
+                            return;
+
+                        Stream stream = _allocationMode == AllocationMode.Hard
+                            ? new FileStream("out" + index + ".txt", FileMode.Create, FileAccess.Write)
+                            : (Stream)new MemoryStream();
+
+                        using (var writer = new StreamWriter(stream, Encoding.UTF8, 1024, stream is MemoryStream))
                         {
                             foreach (var number in Enumerable.Range(0, byte.MaxValue))
                             {
@@ -57,12 +74,18 @@ namespace RandomDataGenerator
                                     finalString += s;
                                 }
                                 writer.WriteLine(finalString);
+
+                                if (token.IsCancellationRequested)
+                                    return;
                             }
                         }
 
+                        if (_allocationMode == AllocationMode.Hard)
+                            stream = new FileStream("out" + index + ".txt", FileMode.Open, FileAccess.Read);
+
                         for (var i = 0; i < MaxReadAttempts; i++)
                         {
-                            using (var reader = new StreamReader(new FileStream("out" + index + ".txt", FileMode.Open, FileAccess.Read)))
+                            using (var reader = new StreamReader(stream, Encoding.UTF8, true, 1024, true))
                             {
                                 var fileContents = reader.ReadToEnd();
                                 _reversedStrings.Add(Reverse(fileContents));
@@ -71,7 +94,11 @@ namespace RandomDataGenerator
                             if (token.IsCancellationRequested)
                                 return;
                         }
-
+                        
+                        if (_allocationMode == AllocationMode.Light)
+                        {
+                            //GC.Collect();
+                        }
                     }
                     catch (OutOfMemoryException)
                     {
@@ -81,6 +108,8 @@ namespace RandomDataGenerator
                 }); 
                 _reversedStrings.Clear();
             }
+
+            AllocationCompleted = true;
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization)]

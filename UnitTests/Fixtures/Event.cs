@@ -5,6 +5,7 @@ using EventsProcessingAPI.DataRead;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnitTests.Common;
 
 namespace UnitTests.Fixtures
 {
@@ -49,6 +50,9 @@ namespace UnitTests.Fixtures
 
                 // 31s - 43s
                 new EventPair(offset + Durations.Second * 31, 12, TimeUnit.Second, true),
+
+                // 64s - 64s337
+                new EventPair(offset + 64 * Durations.Second, 337, TimeUnit.CpuTick, true)
             };
 
             return CreateBucketContainer(events, offset);
@@ -66,19 +70,16 @@ namespace UnitTests.Fixtures
                 var startEvent = new RealEvent(EventType.Start, startEventTime);
                 var stopEvent = new RealEvent(EventType.Stop, startEventTime + pair.Duration * pair.DurationTimeUnit.GetTimeUnitDuration());
 
-                if (!builder.IsFitIntoCurrentBucket(startEvent.Ticks))
-                {
-                    buckets.Add(builder.Build(false));
-                    builder.StartNewBucket(startEvent.Ticks);
-                }
+                
+                builder.StartNewBucket(offset);
                 builder.AddEvent(startEvent);
-
-
+                
                 if (!builder.IsFitIntoCurrentBucket(stopEvent.Ticks))
                 {
                     buckets.Add(builder.Build(false));
                     builder.StartNewBucket(stopEvent.Ticks);
                 }
+
                 builder.AddEvent(stopEvent);
                 previousEventTime = stopEvent.Ticks;
             }

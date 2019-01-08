@@ -43,6 +43,10 @@ namespace RandomDataGenerator
             {
                 // Check for a notification of an approaching collection.
                 GCNotificationStatus s = GC.WaitForFullGCApproach();
+
+                if (!_isStarted)
+                    return;
+
                 if (s == GCNotificationStatus.Succeeded)
                 {
                     //Console.WriteLine("GC Notification raised.");

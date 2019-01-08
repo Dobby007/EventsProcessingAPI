@@ -29,6 +29,12 @@ namespace EventsChart
 
         public static bool TryGetBestTimeFactor(double time, TimeUnit unit, out double bestFactor)
         {
+            if (unit == TimeUnit.Hour)
+            {
+                bestFactor = Math.Ceiling(time);
+                return true;
+            }
+
             var factors = _factors[unit];
             int index = Array.BinarySearch(factors, time);
             if (index < 0)

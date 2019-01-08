@@ -19,9 +19,14 @@ namespace EventsProcessingAPI.Density
         /// <returns></returns>
         public static double[] GetDensities(BucketContainer container, long start, long end, long segmentSize)
         {
-            if (end < start)
+            if (end <= start)
             {
-                throw new ArgumentException("Wrong interval. End timestamp must be not less than start timestamp.");
+                throw new ArgumentException("Wrong interval. End timestamp must be greater than start timestamp.");
+            }
+
+            if (end - start < segmentSize)
+            {
+                throw new ArgumentException("Segment size is too big for this time interval", nameof(segmentSize));
             }
 
 
@@ -63,7 +68,7 @@ namespace EventsProcessingAPI.Density
             }
             catch (OverflowException)
             {
-                throw new InvalidOperationException("Too big range of events. I thought that it's never gonna happen.");
+                throw new InvalidOperationException("Too big range of events");
             }
 
 #if DEBUG

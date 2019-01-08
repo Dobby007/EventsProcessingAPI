@@ -29,9 +29,12 @@ namespace EventsProcessingAPI.DataRead
 
         public Bucket Build(bool withPayloads)
         {
+            if (_bucketOffset < 0)
+                throw new InvalidOperationException("Bucket should initialized first");
+
             if (_bucketSize == 0)
                 return null;
-
+            
             var eventsInBucket = new Event[_bucketSize];
             Array.Copy(_eventsBuffer, eventsInBucket, _bucketSize);
             Payload[] payloadsInBucket = null;

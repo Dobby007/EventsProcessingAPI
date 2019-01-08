@@ -27,7 +27,7 @@ namespace EventsProcessingAPI.Density
                     segmentSize *= 2;
 
                 TimeUnit nextTimeUnit = (TimeUnit)((byte)currentTimeUnit << 1);
-                if (segmentSize >= nextTimeUnit.GetTimeUnitDuration() && currentTimeUnit < TimeUnit.Hour)
+                if (currentTimeUnit < TimeUnit.Hour && segmentSize >= nextTimeUnit.GetTimeUnitDuration())
                 {
                     currentTimeUnit = nextTimeUnit;
                 }

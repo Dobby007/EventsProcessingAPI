@@ -54,7 +54,7 @@ namespace EventsChartExample
             LoadProgress.Visibility = Visibility.Visible;
             LoadBtn.IsEnabled = false;
 
-            var bucketContainer = await apiFacade.LoadEventsFromFileAsync(SelectiFilePath.Text, LoadStrategyType.LoadEventsAndPayloadsForChart);
+            var bucketContainer = await apiFacade.LoadEventsFromFileAsync(SelectiFilePath.Text, LoadStrategyType.LoadEventsForChart);
 
             var chartWindow = new ChartWindow(bucketContainer);
             chartWindow.Owner = this;

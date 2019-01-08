@@ -25,7 +25,7 @@ namespace RandomDataGenerator
             _interval = interval;
         }
 
-        public void GenerateFile(int desiredEventsCount)
+        public void GenerateFile(int desiredEventsCount, AllocationMode allocationMode)
         {
             using (var watcher = new GCNotificationWatcher())
             {
@@ -33,16 +33,16 @@ namespace RandomDataGenerator
                 watcher.OnGarbageCollectionEnded += AddStopEvent;
                 watcher.Start();
 
-                var heavyMetal = new ObjectAllocator();
+                var heavyMetal = new ObjectAllocator(allocationMode);
                 heavyMetal.Start();
 
                 var timer = new Timer(state =>
                 {
-                    _gcEventsCatched.Set();
                     heavyMetal.Stop();
+                    _gcEventsCatched.Set();
                 }, null, (long)_interval.TotalMilliseconds, Timeout.Infinite);
 
-                WriteFile(() => heavyMetal.IsRunning, false);
+                WriteFile(() => heavyMetal.IsRunning && !heavyMetal.AllocationCompleted, false);
 
                 timer.Dispose();
             }
@@ -122,7 +122,7 @@ namespace RandomDataGenerator
                 using (var fileWriter = new FileWriter(_filename, append))
                 {
                     int writtenEvents = 0;
-                    while (continueWriting())
+                    while (continueWriting() || !_queue.IsEmpty)
                     {
                         _gcEventsCatched.WaitOne();
                         while (_queue.TryDequeue(out RealEvent ev))
@@ -134,7 +134,7 @@ namespace RandomDataGenerator
                             writtenEvents++;
                         }
                         Console.Write("\rNumber of events written: {0}", writtenEvents);
-
+                        
                     }
                 }
             });

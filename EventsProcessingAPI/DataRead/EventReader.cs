@@ -68,6 +68,7 @@ namespace EventsProcessingAPI.DataRead
             long firstTimestamp = -1;
             double? totalStreamLength = null;
             long lastEventTime = 0;
+            long eventsCountRead = 0;
             EventType lastEventType = EventType.Stop; // first event type is Start anyway
 
             // Try to calculate total events count
@@ -125,6 +126,7 @@ namespace EventsProcessingAPI.DataRead
                     
                     lastEventTime = eventTime;
                     lastEventType = eventType;
+                    eventsCountRead++;
                 }
             }
             catch (EndOfStreamException)

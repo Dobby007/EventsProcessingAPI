@@ -132,11 +132,14 @@ namespace EventsChart
             {
                 bestTimeUnitDuration = currentDuration;
                 bestTimeUnit = currentTimeUnit;
+                if (currentTimeUnit == TimeUnit.Hour)
+                    break;
                 currentTimeUnit = (TimeUnit)((byte)currentTimeUnit << 1);
             }
             while (labelTime % (currentDuration = currentTimeUnit.GetTimeUnitDuration()) == 0);
 
-            
+            if (labelTime % currentDuration == 0)
+                return $"{labelTime / bestTimeUnitDuration}{bestTimeUnit.GetTimeUnitAsString()}";
 
             return $"{labelTime % currentDuration / bestTimeUnitDuration}{bestTimeUnit.GetTimeUnitAsString()}";
         }

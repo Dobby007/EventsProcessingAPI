@@ -2,7 +2,7 @@
   "profiles": {
     "RandomDataGenerator": {
       "commandName": "Project",
-      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin 00:03:00 100000000"
+      "commandLineArgs": "..\\..\\..\\..\\Data\\events.bin 00:01:00 10000000 light"
     }
   }
 }
