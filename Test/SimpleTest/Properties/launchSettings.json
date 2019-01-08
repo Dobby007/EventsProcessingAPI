@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "SimpleTest": {
-      "commandName": "Project",
-      "commandLineArgs": "..\\..\\..\\..\\..\\Data\\events.bin"
-    }
-  }
-}
