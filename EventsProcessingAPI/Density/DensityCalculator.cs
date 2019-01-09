@@ -4,11 +4,14 @@ using EventsProcessingAPI.Ranges;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace EventsProcessingAPI.Density
 {
     internal static class DensityCalculator
     {
+        const int ParallelBatchSize = 100;
+
         /// <summary>
         /// Gets densities for segments with size equal to <paramref name="segmentSize"/>
         /// </summary>
@@ -85,19 +88,39 @@ namespace EventsProcessingAPI.Density
             start += skippedDensities * segmentSize;
             
 
-            var leftDensities = densities.AsMemory(skippedDensities);
-            var span = leftDensities.Span;
+            var densitiesToCalculate = densities.AsMemory(skippedDensities);
+            
+            Parallel.For(0, (int)Math.Ceiling(densitiesToCalculate.Length / (double)ParallelBatchSize), i =>
+            {
+                Span<double> batch;
+                int leftBoundary = i * ParallelBatchSize;
+                long partitionStartTime, partitionEndTime;
+                
+                if (leftBoundary + ParallelBatchSize >= densitiesToCalculate.Length)
+                {
+                    int batchLength = densitiesToCalculate.Length - i * ParallelBatchSize;
+                    batch = densitiesToCalculate.Span.Slice(leftBoundary, batchLength);
+                    partitionStartTime = start + leftBoundary * segmentSize;
+                    partitionEndTime = start + (leftBoundary + batchLength) * segmentSize;
+                }
+                else
+                {
+                    batch = densitiesToCalculate.Span.Slice(leftBoundary, ParallelBatchSize);
+                    partitionStartTime = start + leftBoundary * segmentSize;
+                    partitionEndTime = start + (leftBoundary + ParallelBatchSize) * segmentSize - 1;
+                }
+                
+                CalculateDensities(
+                    container.Buckets,
+                    partitionStartTime,
+                    partitionEndTime,
+                    segmentSize,
+                    batch,
+                    true,
+                    out long processedRange
+                );
+            });
 
-
-            CalculateDensities(
-                container.Buckets,
-                start,
-                start + leftDensities.Length * segmentSize,
-                segmentSize,
-                span,
-                true,
-                out long processedRange
-            );
 
             return densities;
         }
@@ -224,9 +247,7 @@ namespace EventsProcessingAPI.Density
                         throw new ArithmeticException("Ëvents are not sorted in ascending order");
 
                     distance = filled + unfilled + (currentEventTime - lastEventTime);
-#if DEBUG
-                    var originalLastEventTime = lastEventTime;
-#endif
+
                     int calculatedDensities = 0;
                     while (distance >= segmentSize)
                     {
