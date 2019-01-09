@@ -16,6 +16,9 @@ namespace EventsProcessingAPI.Density
 
         private readonly TreeDictionary<uint, double> _minutes;
 
+        internal TreeDictionary<uint, double> Seconds => _seconds;
+        internal TreeDictionary<uint, double> Minutes => _minutes;
+
         public DensityHintContainer(
             TreeDictionary<uint, double> seconds, 
             TreeDictionary<uint, double> minutes)

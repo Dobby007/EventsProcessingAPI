@@ -44,7 +44,7 @@ namespace EventsProcessingAPI.Density
             ushort totalSegments = 0;
             try
             {
-                totalSegments = checked((ushort)Math.Ceiling(Math.Max(end - start - 1, 1) / (double)segmentSize));
+                totalSegments = checked((ushort)Math.Ceiling((end - start) / (double)segmentSize));
             }
             catch (OverflowException)
             {
@@ -128,9 +128,9 @@ namespace EventsProcessingAPI.Density
             try
             {
                 if (finalize)
-                    totalSegments = checked((ushort)Math.Ceiling((end - start.Value - 1) / (double)segmentSize));
+                    totalSegments = checked((ushort)Math.Ceiling((end - start.Value) / (double)segmentSize));
                 else
-                    totalSegments = checked((ushort)Math.Floor((end - start.Value - 1) / (double)segmentSize));
+                    totalSegments = checked((ushort)Math.Floor((end - start.Value) / (double)segmentSize));
             }
             catch (OverflowException)
             {
@@ -165,7 +165,7 @@ namespace EventsProcessingAPI.Density
         )
         {
             var buckets = bucketsArray.Span;
-            var range = RangeSelector.GetRange(bucketsArray.Span, start, end);
+            var range = RangeSelector.GetRange(bucketsArray.Span, start, end + 1);
             if (!range.IsFound && !range.IsNearestEventFound)
                 throw new RangeNotFoundException();
 

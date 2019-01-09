@@ -36,6 +36,9 @@ namespace EventsProcessingAPI.Common
 
         public static TimeUnit GetCeilingTimeUnit(long segmentSize)
         {
+            if (segmentSize == 1)
+                return TimeUnit.CpuTick;
+
             var timeUnit = TimeUnit.Microsecond;
             while (timeUnit.GetTimeUnitDuration() < segmentSize && timeUnit != TimeUnit.Hour)
             {
@@ -47,7 +50,11 @@ namespace EventsProcessingAPI.Common
 
         public static TimeUnit GetFloorTimeUnit(long segmentSize)
         {
+            if (segmentSize < 10)
+                return TimeUnit.CpuTick;
+
             var floatSegmentSize = (double)segmentSize;
+
             var timeUnit = TimeUnit.Microsecond;
             while (floatSegmentSize / timeUnit.GetTimeUnitDuration() > 1 && timeUnit != TimeUnit.Hour)
             {

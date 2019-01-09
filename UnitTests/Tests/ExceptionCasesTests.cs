@@ -6,11 +6,11 @@ using Xunit;
 
 namespace UnitTests.Tests
 {
-    public class ExceptionCases : IClassFixture<SampleEventsFixture>
+    public class ExceptionCasesTests : IClassFixture<SampleEventsFixture>
     {
         SampleEventsFixture _fixture;
 
-        public ExceptionCases(SampleEventsFixture fixture)
+        public ExceptionCasesTests(SampleEventsFixture fixture)
         {
             _fixture = fixture;
         }

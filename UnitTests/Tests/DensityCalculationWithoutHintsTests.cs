@@ -7,11 +7,11 @@ using Xunit;
 
 namespace UnitTests.Tests
 {
-    public class DensityCalculationWithoutHints : IClassFixture<SampleEventsFixture>
+    public class DensityCalculationWithoutHintsTests : IClassFixture<SampleEventsFixture>
     {
         SampleEventsFixture _fixture;
 
-        public DensityCalculationWithoutHints(SampleEventsFixture fixture)
+        public DensityCalculationWithoutHintsTests(SampleEventsFixture fixture)
         {
             _fixture = fixture;
         }
@@ -46,11 +46,11 @@ namespace UnitTests.Tests
         }
 
         [Theory]
-        [InlineData(64 * Durations.Second, 65 * Durations.Second + 1, 500, 0.674)]
-        [InlineData(64 * Durations.Second, 65 * Durations.Second + 1, Durations.Millisecond, 0.0337)]
-        [InlineData(64 * Durations.Second, 65 * Durations.Second + 1, Durations.Second, 0.0000337)]
-        [InlineData(35 * Durations.Second, 65 * Durations.Second + 1, Durations.Second * 30, 0.26666779)]
-        [InlineData(35 * Durations.Second, 35 * Durations.Second + Durations.Minute + 1, Durations.Minute, 0.133333895)]
+        [InlineData(64 * Durations.Second, 65 * Durations.Second, 500, 0.674)]
+        [InlineData(64 * Durations.Second, 65 * Durations.Second, Durations.Millisecond, 0.0337)]
+        [InlineData(64 * Durations.Second, 65 * Durations.Second, Durations.Second, 0.0000337)]
+        [InlineData(35 * Durations.Second, 65 * Durations.Second, Durations.Second * 30, 0.26666779)]
+        [InlineData(35 * Durations.Second, 35 * Durations.Second + Durations.Minute, Durations.Minute, 0.133333895)]
 
         public void CalculateDensityForOneSegment(long start, long end, long segmentSize, double expectedDensity)
         {
@@ -122,7 +122,7 @@ namespace UnitTests.Tests
         }
 
         [Theory]
-        [InlineData(0, 21, Durations.CpuTick * 5, new[] { 1D, 0.4, 0.6, 0.6 })]
+        [InlineData(0, 20, Durations.CpuTick * 5, new[] { 1D, 0.4, 0.6, 0.6 })]
         public void CalculateDensitiesForSeveralSegments(long start, long end, long segmentSize, double[] expectedDensities)
         {
             var densities = DensityCalculator.GetDensities(_fixture.SampleEvents2, start, end, segmentSize);

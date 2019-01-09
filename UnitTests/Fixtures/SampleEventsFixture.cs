@@ -11,13 +11,26 @@ namespace UnitTests.Fixtures
 {
     public class SampleEventsFixture
     {
-        public BucketContainer SampleEvents1 { get; }
-        public BucketContainer SampleEvents2 { get; }
+        private readonly List<BucketContainer> _eventSamples;
+
+        public BucketContainer SampleEvents1 => GetByIndex(0);
+        public BucketContainer SampleEvents2 => GetByIndex(1);
+        public BucketContainer SampleEvents3 => GetByIndex(2);
+
 
         public SampleEventsFixture()
         {
-            SampleEvents1 = CreateSampleEventsSet(0);
-            SampleEvents2 = CreateSampleEventsSet2(0);
+            _eventSamples = new List<BucketContainer> {
+                CreateSampleEventsSet(0),
+                CreateSampleEventsSet2(0),
+                CreateSampleEventsSet3(0)
+            };
+        }
+
+
+        public BucketContainer GetByIndex(int index)
+        {
+            return _eventSamples[index];
         }
 
         private BucketContainer CreateSampleEventsSet(long offset)
@@ -30,7 +43,7 @@ namespace UnitTests.Fixtures
                 new EventPair(20, 20, TimeUnit.CpuTick),
                 new EventPair(55, 10, TimeUnit.CpuTick),
 
-                // 2μs - 4043μs
+                // 340μs - 4043μs
                 new EventPair(offset + Durations.Microsecond * 34, 12, TimeUnit.Microsecond, true),
                 new EventPair(Durations.Microsecond, 10, TimeUnit.Microsecond),
                 new EventPair(Durations.Millisecond, 10, TimeUnit.Microsecond),
@@ -68,6 +81,27 @@ namespace UnitTests.Fixtures
                 new EventPair(offset + 0, 7, TimeUnit.CpuTick),
                 new EventPair(4, 3, TimeUnit.CpuTick),
                 new EventPair(3, 3, TimeUnit.CpuTick),
+            };
+
+            return CreateBucketContainer(events, offset);
+        }
+
+        private BucketContainer CreateSampleEventsSet3(long offset)
+        {
+            var events = new[]
+            {
+                new EventPair(offset + 0, 5, TimeUnit.Second),
+                new EventPair(7, 3, TimeUnit.Second),
+                new EventPair(1, 4, TimeUnit.Second),
+                new EventPair(offset + 13 * Durations.Second, 14, TimeUnit.Second, true),
+                new EventPair(8 * Durations.Second, 14, TimeUnit.Second),
+                new EventPair(1 * Durations.Second, 3, TimeUnit.Second),
+                new EventPair(1 * Durations.Second, 4, TimeUnit.Second),
+                new EventPair(2 * Durations.Second, 2, TimeUnit.Second),
+                new EventPair(10 * Durations.Second, 10, TimeUnit.Second),
+                new EventPair(5 * Durations.Second, 2, TimeUnit.Second),
+                new EventPair(5 * Durations.Second, 2, TimeUnit.Second),
+                new EventPair(1 * Durations.Second, 4, TimeUnit.Second)
             };
 
             return CreateBucketContainer(events, offset);

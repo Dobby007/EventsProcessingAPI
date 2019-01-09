@@ -5,7 +5,7 @@ using System;
 
 namespace UnitTests.Tests
 {
-    public class BucketCreation
+    public class BucketBuilderTests
     {
 
         [Fact]

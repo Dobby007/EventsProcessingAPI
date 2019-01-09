@@ -71,9 +71,9 @@ namespace EventsProcessingAPI
             return _buckets.Length > 0 ? _buckets[_buckets.Length - 1] : null;
         }
 
-        public EventEnumerable GetEvents(long start, long end)
+        public EventEnumerable GetEvents(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp));
+            var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
             if (!range.IsFound)
                 return EventEnumerable.Empty;
 
@@ -84,9 +84,9 @@ namespace EventsProcessingAPI
             );
         }
 
-        public RealEventEnumerable GetRealEvents(long start, long end)
+        public RealEventEnumerable GetRealEvents(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp));
+            var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
             if (!range.IsFound)
                 return RealEventEnumerable.Empty;
 
@@ -96,13 +96,8 @@ namespace EventsProcessingAPI
                 range.LastEventIndex
             );
         }
-
-        public double[] GetDensities(long start, long end, long segmentSize)
-        {
-            return DensityCalculator.GetDensities(this, start, end, segmentSize);
-        }
-
-        public PayloadEnumerable GetPayloads(long start, long end)
+        
+        public PayloadEnumerable GetPayloads(long start, long end, bool includeEventsOutOfRange = true)
         {
             var range = RangeSelector.GetRange(_buckets, start, end);
             if (!range.IsFound)
@@ -115,6 +110,10 @@ namespace EventsProcessingAPI
             );
         }
 
+        public double[] GetDensities(long start, long end, long segmentSize)
+        {
+            return DensityCalculator.GetDensities(this, start, end, segmentSize);
+        }
 
         public Bucket[] GetBuckets(long start, long end)
         {
