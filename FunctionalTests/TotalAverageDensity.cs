@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace FunctionalTests
 {
@@ -15,15 +16,16 @@ namespace FunctionalTests
         private readonly FileWith500kEventsFixture File500k;
         private readonly FileWith1mEventsFixture File1m;
         private readonly FileWith10mEventsFixture File10m;
-
+        private readonly ITestOutputHelper _output;
 
         public TotalAverageDensity(FileWith100kEventsFixture file100k, FileWith500kEventsFixture file500k,
-            FileWith1mEventsFixture file1m, FileWith10mEventsFixture file10m)
+            FileWith1mEventsFixture file1m, FileWith10mEventsFixture file10m, ITestOutputHelper output)
         {
             File100k = file100k;
             File500k = file500k;
             File1m = file1m;
             File10m = file10m;
+            _output = output;
         }
 
         [Fact]
@@ -55,7 +57,12 @@ namespace FunctionalTests
             var density1 = CalculateAverageDensityWithApi(fileName, out long start, out long end);
             var density2 = CalculateAverageDensityBySimpleMethod(fileName, start, end);
 
-            Assert.Equal(density2, density1, 3);
+            _output.WriteLine(
+                "Average density calculated with API = {0}, average density calculated by simple method = {1}", 
+                density1, 
+                density2);
+
+            Assert.Equal(density2, density1, 5);
         }
 
         static double CalculateAverageDensityBySimpleMethod(string filePath, long start, long end)
