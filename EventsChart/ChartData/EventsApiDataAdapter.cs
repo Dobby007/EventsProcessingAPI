@@ -8,6 +8,7 @@ using System.Windows;
 using EventsChart.Drawing;
 using EventsDomain;
 using EventsProcessingAPI;
+using EventsProcessingAPI.Enumeration;
 
 namespace EventsChart.ChartData
 {

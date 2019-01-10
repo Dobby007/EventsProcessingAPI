@@ -89,22 +89,21 @@ namespace EventUtility
         private static void DisplayValidPayloads(BucketContainer container, long start, long end)
         {
             var payloads = container.GetPayloads(start, end);
-            Console.WriteLine("There are {0} events in your range (display limit is 100 events):", payloads.Count);
+            Console.WriteLine("There are {0} payloads in your range (display limit is 100 payloads):", payloads.Count);
 
             int count = 0;
             foreach (ref readonly Payload payload in payloads)
             {
-                Console.WriteLine("{0}. Payload: {2}, {3}, {4}, {5}",
-                    count + 1,
-                    0,
-                    payload.First,
-                    payload.Second,
-                    payload.Third,
-                    payload.Fourth);
-
-                if (++count >= 100)
-                    break;
+                if (++count <= 100)
+                    Console.WriteLine("{0}. Payload: {1}, {2}, {3}, {4}",
+                        count,
+                        payload.First,
+                        payload.Second,
+                        payload.Third,
+                        payload.Fourth);
             }
+
+            Console.WriteLine("...Total: {0}", count);
         }
     }
 }

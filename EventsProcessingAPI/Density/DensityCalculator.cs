@@ -1,4 +1,5 @@
 ﻿using EventsDomain;
+using EventsProcessingAPI.Enumeration;
 using EventsProcessingAPI.Exceptions;
 using EventsProcessingAPI.Ranges;
 using System;

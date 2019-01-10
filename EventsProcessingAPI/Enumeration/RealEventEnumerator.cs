@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EventsProcessingAPI
+namespace EventsProcessingAPI.Enumeration
 {
     public ref struct RealEventEnumerator
     {

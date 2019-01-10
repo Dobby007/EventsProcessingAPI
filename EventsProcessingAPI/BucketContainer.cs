@@ -2,27 +2,16 @@
 using EventsProcessingAPI.Exceptions;
 using EventsProcessingAPI.Ranges;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using C5;
 using EventsProcessingAPI.Density;
+using EventsProcessingAPI.Enumeration;
 
 namespace EventsProcessingAPI
 {
     public sealed class BucketContainer
     {
-        private readonly Bucket[] _buckets;
-        /// <summary>
-        /// This field is necessary because first timestamp and first event time may differ
-        /// </summary>
-        private readonly long _firstTimestamp;
-
         internal DensityHintContainer DensityHintContainer { get; set; }
-        public Bucket[] Buckets => _buckets;
-        
-        public long FirstTimestamp => _firstTimestamp;
-
+        public Bucket[] Buckets { get; }
+        public long FirstTimestamp { get; }
         public long LastTimestamp
         {
             get
@@ -37,8 +26,8 @@ namespace EventsProcessingAPI
 
         internal BucketContainer(Bucket[] buckets, long firstTimestamp)
         {
-            _buckets = buckets;
-            _firstTimestamp = firstTimestamp;
+            Buckets = buckets;
+            FirstTimestamp = firstTimestamp;
         }
 
         
@@ -63,22 +52,22 @@ namespace EventsProcessingAPI
 
         public Bucket GetFirstBucket()
         {
-            return _buckets.Length > 0 ? _buckets[0] : null;
+            return Buckets.Length > 0 ? Buckets[0] : null;
         }
 
         public Bucket GetLastBucket()
         {
-            return _buckets.Length > 0 ? _buckets[_buckets.Length - 1] : null;
+            return Buckets.Length > 0 ? Buckets[Buckets.Length - 1] : null;
         }
 
         public EventEnumerable GetEvents(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
+            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
             if (!range.IsFound)
                 return EventEnumerable.Empty;
 
             return new EventEnumerable(
-                new Memory<Bucket>(_buckets, range.FirstBucketIndex, range.Length),
+                new Memory<Bucket>(Buckets, range.FirstBucketIndex, range.Length),
                 range.FirstEventIndex,
                 range.LastEventIndex
             );
@@ -86,12 +75,12 @@ namespace EventsProcessingAPI
 
         public RealEventEnumerable GetRealEvents(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = EventsSelector.GetRangeWithEvents(_buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
+            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
             if (!range.IsFound)
                 return RealEventEnumerable.Empty;
 
             return new RealEventEnumerable(
-                new Memory<Bucket>(_buckets, range.FirstBucketIndex, range.Length),
+                new Memory<Bucket>(Buckets, range.FirstBucketIndex, range.Length),
                 range.FirstEventIndex,
                 range.LastEventIndex
             );
@@ -99,12 +88,12 @@ namespace EventsProcessingAPI
         
         public PayloadEnumerable GetPayloads(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = RangeSelector.GetRange(_buckets, start, end);
+            var range = RangeSelector.GetRange(Buckets, start, end);
             if (!range.IsFound)
                 throw new RangeNotFoundException();
 
             return new PayloadEnumerable(
-                new Memory<Bucket>(_buckets, range.FirstBucketIndex, range.Length),
+                new Memory<Bucket>(Buckets, range.FirstBucketIndex, range.Length),
                 range.FirstEventIndex,
                 range.LastEventIndex
             );
@@ -117,12 +106,12 @@ namespace EventsProcessingAPI
 
         public Bucket[] GetBuckets(long start, long end)
         {
-            var range = RangeSelector.GetRange(_buckets, start, end);
+            var range = RangeSelector.GetRange(Buckets, start, end);
             if (!range.IsFound)
                 throw new RangeNotFoundException();
             
             var slice = new Bucket[range.Length];
-            Array.Copy(_buckets, range.FirstBucketIndex, slice, 0, range.Length);
+            Array.Copy(Buckets, range.FirstBucketIndex, slice, 0, range.Length);
             return slice;
         }
 

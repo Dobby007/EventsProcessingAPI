@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>BenchmarkTest.DensityCalculationTest</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.11.3, OS=Windows 10.0.17134.472 (1803/April2018Update/Redstone4)
+Intel Core i7-3610QM CPU 2.30GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
+Frequency=2241002 Hz, Resolution=446.2290 ns, Timer=TSC
+.NET Core SDK=2.1.500
+  [Host]     : .NET Core 2.1.6 (CoreCLR 4.6.27019.06, CoreFX 4.6.27019.05), 64bit RyuJIT
+  Job-NRDGWX : .NET Core 2.1.6 (CoreCLR 4.6.27019.06, CoreFX 4.6.27019.05), 64bit RyuJIT
+</code></pre>
+<pre><code>LaunchCount=1  WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>      Method</th><th>SegmentSize</th><th>     Mean</th><th>   Error</th><th>  StdDev</th><th>   Median</th><th>      Min</th><th>      Max</th>
+</tr>
+</thead><tbody><tr><td>CalculateDensities</td><td>10</td><td>29,410.4 ns</td><td>577.290 ns</td><td>1,139.513 ns</td><td>29,607.7 ns</td><td>21,801.7 ns</td><td>30,031.8 ns</td>
+</tr><tr><td>GetPayloads</td><td>10</td><td>753.8 ns</td><td>4.405 ns</td><td>3.905 ns</td><td>752.8 ns</td><td>749.3 ns</td><td>764.5 ns</td>
+</tr><tr><td>GetRealEvents</td><td>10</td><td>769.2 ns</td><td>1.372 ns</td><td>1.071 ns</td><td>768.7 ns</td><td>768.4 ns</td><td>771.3 ns</td>
+</tr><tr><td>CalculateDensities</td><td>5000</td><td>34,595.5 ns</td><td>395.644 ns</td><td>370.085 ns</td><td>34,686.0 ns</td><td>34,175.3 ns</td><td>35,483.0 ns</td>
+</tr><tr><td>GetPayloads</td><td>5000</td><td>1,061.5 ns</td><td>8.278 ns</td><td>6.912 ns</td><td>1,059.8 ns</td><td>1,054.8 ns</td><td>1,080.6 ns</td>
+</tr><tr><td>GetRealEvents</td><td>5000</td><td>1,308.9 ns</td><td>33.084 ns</td><td>45.286 ns</td><td>1,299.3 ns</td><td>1,291.0 ns</td><td>1,526.8 ns</td>
+</tr><tr><td>CalculateDensities</td><td>10000</td><td>39,704.0 ns</td><td>229.936 ns</td><td>215.082 ns</td><td>39,749.2 ns</td><td>39,414.0 ns</td><td>40,068.9 ns</td>
+</tr><tr><td>GetPayloads</td><td>10000</td><td>2,435.1 ns</td><td>5.551 ns</td><td>5.193 ns</td><td>2,433.7 ns</td><td>2,429.1 ns</td><td>2,445.9 ns</td>
+</tr><tr><td>GetRealEvents</td><td>10000</td><td>5,876.2 ns</td><td>26.760 ns</td><td>23.722 ns</td><td>5,863.1 ns</td><td>5,854.6 ns</td><td>5,928.0 ns</td>
+</tr><tr><td>CalculateDensities</td><td>100000</td><td>261,544.9 ns</td><td>1,678.209 ns</td><td>1,487.689 ns</td><td>261,659.3 ns</td><td>259,388.2 ns</td><td>265,059.8 ns</td>
+</tr><tr><td>GetPayloads</td><td>100000</td><td>122,834.9 ns</td><td>314.480 ns</td><td>245.525 ns</td><td>122,765.2 ns</td><td>122,599.0 ns</td><td>123,364.6 ns</td>
+</tr><tr><td>GetRealEvents</td><td>100000</td><td>332,983.3 ns</td><td>16,493.147 ns</td><td>16,937.248 ns</td><td>329,025.2 ns</td><td>326,128.4 ns</td><td>398,563.5 ns</td>
+</tr><tr><td>CalculateDensities</td><td>500000</td><td>686,182.1 ns</td><td>13,443.535 ns</td><td>16,509.869 ns</td><td>685,897.6 ns</td><td>620,686.8 ns</td><td>710,764.0 ns</td>
+</tr><tr><td>GetPayloads</td><td>500000</td><td>453,971.9 ns</td><td>1,587.950 ns</td><td>1,326.010 ns</td><td>453,999.0 ns</td><td>452,368.5 ns</td><td>456,677.0 ns</td>
+</tr><tr><td>GetRealEvents</td><td>500000</td><td>1,322,887.7 ns</td><td>88,837.644 ns</td><td>181,471.764 ns</td><td>1,218,378.8 ns</td><td>1,210,251.7 ns</td><td>1,657,455.0 ns</td>
+</tr><tr><td>CalculateDensities</td><td>1000000</td><td>1,252,002.7 ns</td><td>6,789.997 ns</td><td>6,019.155 ns</td><td>1,251,735.7 ns</td><td>1,238,234.5 ns</td><td>1,261,546.0 ns</td>
+</tr><tr><td>GetPayloads</td><td>1000000</td><td>797,642.8 ns</td><td>42,579.985 ns</td><td>125,548.046 ns</td><td>701,792.6 ns</td><td>671,245.1 ns</td><td>1,208,554.5 ns</td>
+</tr><tr><td>GetRealEvents</td><td>1000000</td><td>2,317,835.2 ns</td><td>10,889.131 ns</td><td>9,652.931 ns</td><td>2,316,146.6 ns</td><td>2,304,937.7 ns</td><td>2,337,141.1 ns</td>
+</tr><tr><td>CalculateDensities</td><td>2000000</td><td>2,656,752.6 ns</td><td>52,951.275 ns</td><td>77,615.292 ns</td><td>2,662,150.7 ns</td><td>2,276,931.3 ns</td><td>2,738,997.9 ns</td>
+</tr><tr><td>GetPayloads</td><td>2000000</td><td>1,824,210.6 ns</td><td>3,602.976 ns</td><td>3,370.226 ns</td><td>1,824,056.0 ns</td><td>1,817,394.8 ns</td><td>1,830,936.8 ns</td>
+</tr><tr><td>GetRealEvents</td><td>2000000</td><td>6,565,565.4 ns</td><td>19,500.549 ns</td><td>16,283.841 ns</td><td>6,563,242.3 ns</td><td>6,548,345.9 ns</td><td>6,608,618.2 ns</td>
+</tr><tr><td>CalculateDensities</td><td>4000000</td><td>5,122,178.6 ns</td><td>71,196.737 ns</td><td>66,597.472 ns</td><td>5,149,516.4 ns</td><td>5,008,595.2 ns</td><td>5,208,237.3 ns</td>
+</tr><tr><td>GetPayloads</td><td>4000000</td><td>3,542,073.2 ns</td><td>11,764.153 ns</td><td>11,004.196 ns</td><td>3,537,193.4 ns</td><td>3,530,737.0 ns</td><td>3,567,029.7 ns</td>
+</tr><tr><td>GetRealEvents</td><td>4000000</td><td>9,456,205.7 ns</td><td>18,248.797 ns</td><td>16,177.083 ns</td><td>9,458,126.5 ns</td><td>9,435,916.2 ns</td><td>9,498,485.8 ns</td>
+</tr><tr><td>CalculateDensities</td><td>5000000</td><td>6,130,708.5 ns</td><td>73,440.342 ns</td><td>68,696.142 ns</td><td>6,118,305.5 ns</td><td>6,037,674.0 ns</td><td>6,237,305.7 ns</td>
+</tr><tr><td>GetPayloads</td><td>5000000</td><td>4,358,473.1 ns</td><td>30,356.514 ns</td><td>26,910.259 ns</td><td>4,349,574.5 ns</td><td>4,332,720.6 ns</td><td>4,415,938.8 ns</td>
+</tr><tr><td>GetRealEvents</td><td>5000000</td><td>15,666,550.3 ns</td><td>39,575.242 ns</td><td>35,082.421 ns</td><td>15,657,362.8 ns</td><td>15,633,859.0 ns</td><td>15,755,540.1 ns</td>
+</tr><tr><td>CalculateDensities</td><td>10000000</td><td>792,492.1 ns</td><td>2,596.915 ns</td><td>2,168.542 ns</td><td>791,897.0 ns</td><td>790,269.0 ns</td><td>798,236.6 ns</td>
+</tr><tr><td>GetPayloads</td><td>10000000</td><td>4,299,803.7 ns</td><td>10,522.158 ns</td><td>8,786.478 ns</td><td>4,300,031.4 ns</td><td>4,288,140.1 ns</td><td>4,322,154.6 ns</td>
+</tr><tr><td>GetRealEvents</td><td>10000000</td><td>15,484,669.4 ns</td><td>70,218.430 ns</td><td>65,682.363 ns</td><td>15,473,531.8 ns</td><td>15,403,564.5 ns</td><td>15,652,999.5 ns</td>
+</tr><tr><td>CalculateDensities</td><td>20000000</td><td>475,477.6 ns</td><td>1,426.243 ns</td><td>1,264.328 ns</td><td>475,331.0 ns</td><td>473,449.8 ns</td><td>477,464.4 ns</td>
+</tr><tr><td>GetPayloads</td><td>20000000</td><td>8,015,049.8 ns</td><td>260,794.704 ns</td><td>768,959.070 ns</td><td>7,977,371.8 ns</td><td>5,650,657.3 ns</td><td>9,886,653.1 ns</td>
+</tr><tr><td>GetRealEvents</td><td>20000000</td><td>22,361,753.8 ns</td><td>437,402.680 ns</td><td>409,146.738 ns</td><td>22,361,566.0 ns</td><td>21,631,925.8 ns</td><td>22,947,771.4 ns</td>
+</tr><tr><td>CalculateDensities</td><td>40000000</td><td>495,399.3 ns</td><td>9,745.174 ns</td><td>15,172.062 ns</td><td>499,303.2 ns</td><td>463,612.9 ns</td><td>529,681.4 ns</td>
+</tr><tr><td>GetPayloads</td><td>40000000</td><td>6,793,953.3 ns</td><td>131,909.651 ns</td><td>201,439.969 ns</td><td>6,769,663.4 ns</td><td>6,409,486.9 ns</td><td>7,259,528.7 ns</td>
+</tr><tr><td>GetRealEvents</td><td>40000000</td><td>22,280,539.9 ns</td><td>426,210.355 ns</td><td>418,595.558 ns</td><td>22,272,804.1 ns</td><td>21,637,659.9 ns</td><td>23,158,812.6 ns</td>
+</tr><tr><td>CalculateDensities</td><td>100000000</td><td>457,707.4 ns</td><td>6,540.423 ns</td><td>6,117.916 ns</td><td>458,642.3 ns</td><td>443,878.0 ns</td><td>468,541.1 ns</td>
+</tr><tr><td>GetPayloads</td><td>100000000</td><td>6,812,035.1 ns</td><td>153,587.567 ns</td><td>215,308.319 ns</td><td>6,770,274.7 ns</td><td>6,557,587.4 ns</td><td>7,486,270.0 ns</td>
+</tr><tr><td>GetRealEvents</td><td>100000000</td><td>22,418,274.4 ns</td><td>551,789.348 ns</td><td>541,930.920 ns</td><td>22,371,530.1 ns</td><td>21,615,053.5 ns</td><td>23,576,899.1 ns</td>
+</tr><tr><td>CalculateDensities</td><td>200000000</td><td>387,379.8 ns</td><td>7,621.980 ns</td><td>9,073.425 ns</td><td>389,574.3 ns</td><td>370,225.2 ns</td><td>403,143.7 ns</td>
+</tr><tr><td>GetPayloads</td><td>200000000</td><td>6,810,093.4 ns</td><td>135,505.042 ns</td><td>230,097.845 ns</td><td>6,758,051.7 ns</td><td>6,336,037.7 ns</td><td>7,349,298.1 ns</td>
+</tr><tr><td>GetRealEvents</td><td>200000000</td><td>22,207,866.5 ns</td><td>421,766.717 ns</td><td>433,123.366 ns</td><td>22,196,767.3 ns</td><td>21,425,627.9 ns</td><td>22,951,480.0 ns</td>
+</tr></tbody></table>
+</body>
+</html>

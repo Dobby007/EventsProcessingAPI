@@ -1,7 +1,7 @@
 ﻿using EventsDomain;
 using System;
 
-namespace EventsProcessingAPI
+namespace EventsProcessingAPI.Enumeration
 {
     public class RealEventEnumerable : AbstractEventEnumerable
     {

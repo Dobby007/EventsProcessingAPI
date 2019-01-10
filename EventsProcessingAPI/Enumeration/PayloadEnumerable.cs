@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace EventsProcessingAPI
+namespace EventsProcessingAPI.Enumeration
 {
     public class PayloadEnumerable : AbstractEventEnumerable
     {
@@ -13,7 +13,7 @@ namespace EventsProcessingAPI
 
         public PayloadEnumerator GetEnumerator()
         {
-            return new PayloadEnumerator(_buckets, _firstEventIndex, _lastEventIndex);
+            return new PayloadEnumerator(_buckets.Span, _firstEventIndex, _lastEventIndex);
         }
         
     }

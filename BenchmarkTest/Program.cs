@@ -5,6 +5,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Validators;
+using EventsDomain;
 using EventsProcessingAPI;
 using EventsProcessingAPI.Common;
 using System;
@@ -86,7 +87,7 @@ namespace BenchmarkTest
                 };
 
                 var filePath = Environment.GetEnvironmentVariable(FilePathEnvVariable);
-                BucketContainer = eventsApi.LoadEventsFromFileAsync(filePath, LoadStrategyType.LoadEventsForChart)
+                BucketContainer = eventsApi.LoadEventsFromFileAsync(filePath, LoadStrategyType.LoadEventsAndPayloadsForChart)
                     .GetAwaiter()
                     .GetResult();
 
@@ -110,6 +111,33 @@ namespace BenchmarkTest
             long tStart = Start, tEnd = Math.Min(Start + SegmentSize * 2000, End);
             BucketContainer.GetDensities(tStart, tEnd, SegmentSize);
             
+        }
+
+        [Benchmark]
+        public int GetPayloads()
+        {
+            long tStart = Start, tEnd = Math.Min(Start + SegmentSize * 2000, End);
+            var payloads = BucketContainer.GetPayloads(tStart, tEnd, false);
+            int count = 0;
+            foreach (ref readonly Payload payload in payloads)
+            {
+                count++;
+            }
+            return count;
+        }
+
+
+        [Benchmark]
+        public int GetRealEvents()
+        {
+            long tStart = Start, tEnd = Math.Min(Start + SegmentSize * 2000, End);
+            var realEvents = BucketContainer.GetRealEvents(tStart, tEnd, false);
+            int count = 0;
+            foreach (var ev in realEvents)
+            {
+                count++;
+            }
+            return count;
         }
     }
     

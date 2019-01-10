@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace EventsProcessingAPI
+namespace EventsProcessingAPI.Enumeration
 {
     public abstract class AbstractEventEnumerable
     {

@@ -1,5 +1,4 @@
-using EventsProcessingAPI;
-using EventsProcessingAPI.Density;
+using EventsProcessingAPI.Enumeration;
 using System;
 using System.Linq;
 using UnitTests.Common;
