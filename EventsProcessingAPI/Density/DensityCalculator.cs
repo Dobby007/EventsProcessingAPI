@@ -3,6 +3,7 @@ using EventsProcessingAPI.Enumeration;
 using EventsProcessingAPI.Exceptions;
 using EventsProcessingAPI.Ranges;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -56,7 +57,9 @@ namespace EventsProcessingAPI.Density
             }
 
             var densities = new double[totalSegments];
-            int skippedDensities = -1;
+
+            int processedSegmentsUsingHints = -1;
+            long processedSegmentSize = 0;
             try
             {
                 checked
@@ -66,7 +69,8 @@ namespace EventsProcessingAPI.Density
                         end - container.FirstTimestamp,
                         segmentSize,
                         densities,
-                        out skippedDensities
+                        out processedSegmentsUsingHints,
+                        out processedSegmentSize
                     );
                 }
             }
@@ -76,46 +80,37 @@ namespace EventsProcessingAPI.Density
             }
 
 #if DEBUG
-            if (skippedDensities == 0 && segmentSize >= 10_000_000)
+            if (processedSegmentsUsingHints == 0 && segmentSize >= 10_000_000)
                 Debug.Fail("Density calculation is perfoming in unoptimized way. It can be eliminated by adjusting range and segment size to appropriate values.");
 #endif
 
-            if (skippedDensities < 0)
-                skippedDensities = 0;
+            if (processedSegmentsUsingHints < 0)
+                processedSegmentsUsingHints = 0;
 
-            if (skippedDensities == densities.Length)
+            if (processedSegmentsUsingHints == densities.Length)
                 return densities;
-            
-            start += skippedDensities * segmentSize;
-            
 
-            var densitiesToCalculate = densities.AsMemory(skippedDensities);
-            
-            Parallel.For(0, (int)Math.Ceiling(densitiesToCalculate.Length / (double)ParallelBatchSize), i =>
+            start += processedSegmentsUsingHints * segmentSize;
+
+
+            int fullyCalculatedDensitiesCount = processedSegmentSize == segmentSize
+                ? processedSegmentsUsingHints
+                : 0;
+
+
+
+            Parallel.ForEach(GetPartitions(start, segmentSize, densities.AsSpan(fullyCalculatedDensitiesCount)), (partition) =>
             {
-                Span<double> batch;
-                int leftBoundary = i * ParallelBatchSize;
-                long partitionStartTime, partitionEndTime;
-                
-                if (leftBoundary + ParallelBatchSize >= densitiesToCalculate.Length)
-                {
-                    int batchLength = densitiesToCalculate.Length - i * ParallelBatchSize;
-                    batch = densitiesToCalculate.Span.Slice(leftBoundary, batchLength);
-                    partitionStartTime = start + leftBoundary * segmentSize;
-                    partitionEndTime = start + (leftBoundary + batchLength) * segmentSize;
-                }
-                else
-                {
-                    batch = densitiesToCalculate.Span.Slice(leftBoundary, ParallelBatchSize);
-                    partitionStartTime = start + leftBoundary * segmentSize;
-                    partitionEndTime = start + (leftBoundary + ParallelBatchSize) * segmentSize - 1;
-                }
-                
-                CalculateDensities(
+                Span<double> batch = densities.AsSpan(fullyCalculatedDensitiesCount)
+                    .Slice(partition.leftBoundary, partition.batchLength);
+
+                PartialDensitiesParameters partialDensities = default;
+                if (fullyCalculatedDensitiesCount == 0 && processedSegmentsUsingHints > 0)
+                    partialDensities = new PartialDensitiesParameters(processedSegmentSize, processedSegmentsUsingHints - partition.leftBoundary);
+
+                DensityCalculator.CalculateDensities(
                     container.Buckets,
-                    partitionStartTime,
-                    partitionEndTime,
-                    segmentSize,
+                    new DensityCalculationRequest(partition.start, partition.end, segmentSize),
                     batch,
                     true,
                     out long processedRange
@@ -125,6 +120,34 @@ namespace EventsProcessingAPI.Density
 
             return densities;
         }
+
+        private static IList<(long start, long end, int leftBoundary, int batchLength)> GetPartitions(long start, long segmentSize, Span<double> targetBuffer)
+        {
+            int partitionCount = (int)Math.Ceiling(targetBuffer.Length / (double)ParallelBatchSize);
+            var list = new List<(long, long, int, int)>(partitionCount);
+
+            for (var partitionIndex = 0; partitionIndex < partitionCount; partitionIndex++)
+            {
+                long partitionStartTime, partitionEndTime;
+                int leftBoundary = partitionIndex * ParallelBatchSize;
+                if (leftBoundary + ParallelBatchSize >= targetBuffer.Length)
+                {
+                    int batchLength = targetBuffer.Length - partitionIndex * ParallelBatchSize;
+                    partitionStartTime = start + leftBoundary * segmentSize;
+                    partitionEndTime = start + (leftBoundary + batchLength) * segmentSize;
+                    list.Add((partitionStartTime, partitionEndTime, leftBoundary, batchLength));
+                }
+                else
+                {
+                    partitionStartTime = start + leftBoundary * segmentSize;
+                    partitionEndTime = start + (leftBoundary + ParallelBatchSize) * segmentSize - 1;
+                    list.Add((partitionStartTime, partitionEndTime, leftBoundary, ParallelBatchSize));
+                }
+            }
+
+            return list;
+        }
+
 
         /// <summary>
         /// Gets densities for segments with size equal to <paramref name="segmentSize"/>
@@ -162,34 +185,29 @@ namespace EventsProcessingAPI.Density
             }
 
             var densitiesBuf = new double[totalSegments];
-            CalculateDensities(
+            DensityCalculator.CalculateDensities(
                 bucketsArray.AsMemory(),
-                start.Value,
-                end,
-                segmentSize,
+                new DensityCalculationRequest(start.Value, end, segmentSize),
                 densitiesBuf,
                 finalize,
                 out long processedRange
             );
 
             nextBatchStartTime = start.Value + processedRange;
-            
+
             return densitiesBuf;
         }
 
-
-        private static void CalculateDensities(
+        internal static void CalculateDensities(
             Memory<Bucket> bucketsArray,
-            long start,
-            long end,
-            long segmentSize,
+            in DensityCalculationRequest request,
             Span<double> targetBuffer,
             bool finalize,
             out long processedRange
         )
         {
             var buckets = bucketsArray.Span;
-            var range = RangeSelector.GetRange(bucketsArray.Span, start, end + 1);
+            var range = RangeSelector.GetRange(bucketsArray.Span, request.Start, request.End + 1);
             if (!range.IsFound && !range.IsNearestEventFound)
                 throw new RangeNotFoundException();
 
@@ -231,7 +249,7 @@ namespace EventsProcessingAPI.Density
                     
                     // The first event in the range may not mean the start time by itself
                     // We can consider event time passed through `start` parameter as the first time
-                    lastEventTime = start;
+                    lastEventTime = request.Start;
                     lastEventType = (EventType)((byte)~firstEvent.Event.EventType & 1);
                 }
                 
@@ -250,10 +268,10 @@ namespace EventsProcessingAPI.Density
                     distance = filled + unfilled + (currentEventTime - lastEventTime);
 
                     int calculatedDensities = 0;
-                    while (distance >= segmentSize)
+                    while (distance >= request.SegmentSize)
                     {
                         long oldDistance = distance;
-                        targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
+                        targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, request.SegmentSize);
                         lastEventTime += oldDistance - distance;
                         distance = currentEventTime - lastEventTime;
                         calculatedDensities++;
@@ -288,15 +306,15 @@ namespace EventsProcessingAPI.Density
             if (finalize && segmentIndex < targetBuffer.Length)
             {
                 // we processed the whole range but some density values remain uncalculated
-                distance = segmentSize;
-                targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, segmentSize);
+                distance = request.SegmentSize;
+                targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, request.SegmentSize);
 
                 // we need to set densities for segments that we didn't processed due to the lack of the events
                 if (lastEventType == EventType.Start)
                     for (; segmentIndex < targetBuffer.Length; segmentIndex++)
                         targetBuffer[segmentIndex] = 1;
 
-                processedRange = end - start;
+                processedRange = request.End - request.Start;
             }
             else if (!finalize)
             {
@@ -304,12 +322,12 @@ namespace EventsProcessingAPI.Density
                 if (segmentIndex == 0)
                     processedRange = 0; // we have not calculated any densities
                 else 
-                    processedRange = segmentIndex * segmentSize;  // we have calculated some densities
+                    processedRange = segmentIndex * request.SegmentSize;  // we have calculated some densities
             }
             else if (filled + unfilled == 0)
             {
                 // we processed the whole range and calculated all the densities
-                processedRange = end - start;
+                processedRange = request.End - request.Start;
             }
             else 
             {

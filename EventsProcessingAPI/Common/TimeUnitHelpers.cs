@@ -12,17 +12,17 @@ namespace EventsProcessingAPI.Common
             switch (timeUnit)
             {
                 case TimeUnit.CpuTick:
-                    return 1L;
+                    return TimeUnitDurations.CpuTick;
                 case TimeUnit.Microsecond:
-                    return 10L;
+                    return TimeUnitDurations.Microsecond;
                 case TimeUnit.Millisecond:
-                    return 10000L;
+                    return TimeUnitDurations.Millisecond;
                 case TimeUnit.Second:
-                    return 10000L * 1000;
+                    return TimeUnitDurations.Second;
                 case TimeUnit.Minute:
-                    return 10000L * 1000 * 60;
+                    return TimeUnitDurations.Minute;
                 case TimeUnit.Hour:
-                    return 10000L * 1000 * 60 * 60;
+                    return TimeUnitDurations.Hour;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timeUnit));
             }

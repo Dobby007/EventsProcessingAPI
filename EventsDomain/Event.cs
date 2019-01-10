@@ -27,6 +27,15 @@ namespace EventsDomain
 
         public readonly EventType EventType;
 
+        public long RelativeTime
+        {
+            get
+            {
+                return (EventTimeHigh << 4 | EventTimeLow >> 4) * 10 +
+                    (EventTimeLow & CpuTickMask);
+            }
+        }
+
         /// <summary>
         /// Constructor of the event
         /// </summary>

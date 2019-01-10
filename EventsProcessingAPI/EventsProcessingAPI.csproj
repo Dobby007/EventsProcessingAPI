@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Enumeration\PartitionedEnumerable.cs" />
+    <Compile Remove="Enumeration\PartitionedEnumerator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="C5" Version="2.5.3" />
     <PackageReference Include="System.Memory" Version="4.5.1" />
   </ItemGroup>

@@ -9,7 +9,6 @@ namespace EventsProcessingAPI.Enumeration
         protected Memory<Bucket> _buckets;
         protected readonly int _firstEventIndex;
         protected readonly int _lastEventIndex;
-        public ReadOnlySpan<Bucket> Buckets => _buckets.Span;
 
         protected AbstractEventEnumerable(Memory<Bucket> buckets, int firstEventIndex, int lastEventIndex)
         {

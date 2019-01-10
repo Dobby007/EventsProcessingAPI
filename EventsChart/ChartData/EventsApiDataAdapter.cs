@@ -33,13 +33,13 @@ namespace EventsChart.ChartData
             else if (segmentSize == 1)
             {
                 var events = _container.GetRealEvents(start, end);
-                return GetFiguresFromEvents(events, end);
+                return GetFiguresFromEvents(events, start, end);
             }
 
             return Enumerable.Empty<IFigure>();
         }
 
-        private IEnumerable<IFigure> GetFiguresFromEvents(RealEventEnumerable events, long endTimestamp)
+        private IEnumerable<IFigure> GetFiguresFromEvents(RealEventEnumerable events, long startTimestamp, long endTimestamp)
         {
             long offset = Offset;
             double height = ChartHeight;
@@ -56,6 +56,9 @@ namespace EventsChart.ChartData
                         startTime = ev.Ticks;
                         break;
                     case EventType.Stop:
+                        if (startTime < 0)
+                            startTime = startTimestamp;
+
                         duration = ev.Ticks - startTime;
                         figures.Add(new Rectangle(
                             new Rect(Math.Max(startTime - offset, 0), 0, duration, height)

@@ -17,6 +17,8 @@ namespace EventsDomain
         public double Density;
         public bool NoPayloadsLoaded => Payloads == null;
 
+        public long StartTime => MaxBucketEventTime * Offset;
+
         public Event GetFirstEvent()
         {
             if (Events.Length < 1)
@@ -26,7 +28,7 @@ namespace EventsDomain
         }
 
         /// <summary>
-        /// Resolution: microsecond
+        /// Resolution: cpu tick
         /// </summary>
         /// <param name="ev"></param>
         /// <returns></returns>
@@ -39,7 +41,7 @@ namespace EventsDomain
         }
 
         /// <summary>
-        /// Resolution: microsecond
+        /// Resolution: cpu tick
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
