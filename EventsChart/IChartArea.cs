@@ -1,4 +1,5 @@
 ﻿using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -8,9 +9,8 @@ namespace EventsChart
     {
         Canvas Canvas { get; }
         void AddToView(FrameworkElement element);
-        BucketContainer BucketContainer { get; }
         long Offset { get; }
-        long SegmentSize { get; }
+        SegmentSize SegmentSize { get; }
         int Width { get; }
         int Height { get; }
     }

@@ -31,11 +31,11 @@ namespace EventsChart
         
 
         public static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
-            nameof(SegmentSize), typeof(long), typeof(TimeLine), new PropertyMetadata(-1L, OnSegmentSizeChanged));
+            nameof(SegmentSize), typeof(SegmentSize), typeof(TimeLine), new PropertyMetadata(new SegmentSize(-1L), OnSegmentSizeChanged));
 
-        public long SegmentSize
+        public SegmentSize SegmentSize
         {
-            get { return (long)GetValue(SegmentSizeProperty); }
+            get { return (SegmentSize)GetValue(SegmentSizeProperty); }
             set { SetValue(SegmentSizeProperty, value); }
         }
 
@@ -68,7 +68,7 @@ namespace EventsChart
         
         private void SetLabelIntervalParameters()
         {
-            long segmentSize = SegmentSize;
+            long segmentSize = SegmentSize.DisplayedValue;
             long minLabelIntervalDuration = segmentSize * MinLabelIntervalWidthInPixels;
             (double Value, TimeUnit Unit) minIntervalDurationInUnits = TimeUnitHelpers.ConvertTicksToTime(minLabelIntervalDuration);
             if (!TimeUnitFactors.TryGetBestTimeFactor(minIntervalDurationInUnits.Value, minIntervalDurationInUnits.Unit, out double factor))
@@ -84,7 +84,7 @@ namespace EventsChart
         {
             base.OnRender(drawingContext);
 
-            long segmentSize = SegmentSize;
+            long segmentSize = SegmentSize.DisplayedValue;
             double labelIntervalWidth = LabelIntervalWidth;
             long labelIntervalDuration = LabelIntervalDuration;
             TimeUnit labelIntervalUnit = LabelIntervalUnit;

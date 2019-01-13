@@ -73,10 +73,10 @@ namespace FunctionalTests
 
             foreach (var segmentSize in containerWithoutDensityHints.GetPreferredSegmentSizes(firstTimestamp, lastTimestamp, 60))
             {
-                long tStart = firstTimestamp, tEnd = Math.Min(firstTimestamp + segmentSize * 10000, lastTimestamp);
+                long tStart = firstTimestamp, tEnd = Math.Min(firstTimestamp + segmentSize.RequestedValue * 10000, lastTimestamp);
 
-                double[] densitiesWithoutHints = containerWithoutDensityHints.GetDensities(tStart, tEnd, segmentSize);
-                double[] densitiesWithHints = containerWithDensityHints.GetDensities(tStart, tEnd, segmentSize);
+                double[] densitiesWithoutHints = containerWithoutDensityHints.GetDensities(tStart, tEnd, segmentSize.RequestedValue);
+                double[] densitiesWithHints = containerWithDensityHints.GetDensities(tStart, tEnd, segmentSize.RequestedValue);
 
                 Assert.Equal(densitiesWithoutHints.Length, densitiesWithHints.Length);
 
@@ -93,7 +93,7 @@ namespace FunctionalTests
                             Expected = densitiesWithoutHints[i],
                             Actual = densitiesWithHints[i],
                             Index = i,
-                            SegmentSize = segmentSize
+                            SegmentSize = segmentSize.RequestedValue
                         });
 
                     }

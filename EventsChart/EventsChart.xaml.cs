@@ -1,4 +1,5 @@
 ﻿using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using System;
 using System.Linq;
 using System.Windows;
@@ -13,7 +14,7 @@ namespace EventsChart
     /// </summary>
     public partial class EventsChart : UserControl, IScrollInfo
     {
-        private long[] _prefferedSegmentSizes = Array.Empty<long>();
+        private SegmentSize[] _prefferedSegmentSizes = Array.Empty<SegmentSize>();
 
         public EventsChart()
         {
@@ -25,7 +26,7 @@ namespace EventsChart
         public bool ZoomIn()
         {
             var currentSegmentSize = SegmentSize;
-            var next = Array.FindIndex(_prefferedSegmentSizes, s => s == currentSegmentSize) - 1;
+            var next = Array.FindIndex(_prefferedSegmentSizes, s => s.Equals(currentSegmentSize)) - 1;
             if (next >= 0)
             {
                 SegmentSize = _prefferedSegmentSizes[next];
@@ -37,7 +38,7 @@ namespace EventsChart
         public bool ZoomOut()
         {
             var currentSegmentSize = SegmentSize;
-            var next = Array.FindIndex(_prefferedSegmentSizes, s => s == currentSegmentSize) + 1;
+            var next = Array.FindIndex(_prefferedSegmentSizes, s => s.Equals(currentSegmentSize)) + 1;
             if (next < _prefferedSegmentSizes.Length)
             {
                 SegmentSize = _prefferedSegmentSizes[next];
@@ -74,8 +75,13 @@ namespace EventsChart
         public static readonly DependencyProperty OffsetProperty = DependencyProperty.Register(
             nameof(Offset), typeof(long), typeof(EventsChart), new PropertyMetadata(-1L, null, CoerceOffset));
 
-        public static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
-            nameof(SegmentSize), typeof(long), typeof(EventsChart), new PropertyMetadata(-1L, OnSegmentSizeChanged, CoerceSegmentSize));
+
+        public static readonly DependencyProperty DisplayedSegmentSizeProperty = DependencyProperty.Register(
+            nameof(DisplayedSegmentSize), typeof(long), typeof(EventsChart), new PropertyMetadata(-1L, OnDsplayedSegmentSizeChanged, CoerceDisplayedSegmentSize));
+
+
+        internal static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
+            nameof(SegmentSize), typeof(SegmentSize), typeof(EventsChart), new PropertyMetadata(new SegmentSize(-1L), OnSegmentSizeChanged, CoerceSegmentSize));
 
 
         public BucketContainer BucketContainer
@@ -90,12 +96,17 @@ namespace EventsChart
             set { SetValue(OffsetProperty, value); }
         }
 
-        public long SegmentSize
+        public long DisplayedSegmentSize
         {
-            get { return (long)GetValue(SegmentSizeProperty); }
-            set { SetValue(SegmentSizeProperty, value); }
+            get { return ((long)GetValue(DisplayedSegmentSizeProperty)); }
+            set { SetValue(DisplayedSegmentSizeProperty, value); }
         }
 
+        internal SegmentSize SegmentSize
+        {
+            get { return (SegmentSize)GetValue(SegmentSizeProperty); }
+            set { SetValue(SegmentSizeProperty, value); }
+        }
         
         #endregion
 
@@ -104,7 +115,7 @@ namespace EventsChart
         {
             SetPrefferedSegmentSizes();
             // We display the whole chart by default
-            if (SegmentSize == -1)
+            if (SegmentSize.DisplayedValue == -1)
                 ZoomOutMax();
 
             UpdateScrollInfo();
@@ -115,9 +126,9 @@ namespace EventsChart
             if (!IsLoaded)
                 return;
 
-            CoerceValue(SegmentSizeProperty);
-
             SetPrefferedSegmentSizes();
+            CoerceValue(SegmentSizeProperty);
+            
             UpdateScrollInfo();
         }
 
@@ -137,11 +148,21 @@ namespace EventsChart
 
         private static void OnSegmentSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
-            d.CoerceValue(OffsetProperty);
-
             if (d is EventsChart chart)
             {
+                chart.DisplayedSegmentSize = ((SegmentSize)args.NewValue).DisplayedValue;
                 chart.UpdateScrollInfo();
+            }
+
+            d.CoerceValue(OffsetProperty);
+
+        }
+
+        private static void OnDsplayedSegmentSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
+        {
+            if (d is EventsChart chart)
+            {
+                chart.SegmentSize = new SegmentSize((long)args.NewValue);
             }
 
         }
@@ -157,12 +178,12 @@ namespace EventsChart
                 if (container == null || offset == -1)
                     return offset;
 
-                long segmentSize = chart.SegmentSize;
+                long segmentSize = chart.SegmentSize.DisplayedValue;
                 offset = (long)Math.Ceiling(offset / (double)segmentSize) * segmentSize;
 
                 long lastTimestamp = container.LastTimestamp;
                 long viewportDuration = (long)(chart.ActualWidth * segmentSize);
-                long lastPossibleTimestamp = (long)Math.Ceiling((container.LastTimestamp - container.FirstTimestamp) / (double)chart.SegmentSize) 
+                long lastPossibleTimestamp = (long)Math.Ceiling((container.LastTimestamp - container.FirstTimestamp) / (double)chart.SegmentSize.DisplayedValue) 
                     * segmentSize;
 
                 return Math.Max(Math.Min(offset, lastPossibleTimestamp - viewportDuration), 0);
@@ -172,23 +193,31 @@ namespace EventsChart
 
         private static object CoerceSegmentSize(DependencyObject d, object value)
         {
-            long current = (long)value;
+            SegmentSize newValue = (SegmentSize)value;
 
             if (d is EventsChart chart)
             {
-                if (current == -1 || chart.BucketContainer == null)
-                    return current;
+                if (newValue.DisplayedValue == -1 || chart.BucketContainer == null)
+                    return newValue;
 
-                if (chart._prefferedSegmentSizes.Length > 0 && !chart._prefferedSegmentSizes.Contains(current))
+                if (chart._prefferedSegmentSizes.Length > 0 && !chart._prefferedSegmentSizes.Contains(newValue))
                     return chart._prefferedSegmentSizes[chart._prefferedSegmentSizes.Length - 1];
             }
 
-            return current;
+            return newValue;
+        }
+
+        private static object CoerceDisplayedSegmentSize(DependencyObject d, object value)
+        {
+            long newValue = (long)value;
+            
+
+            return newValue;
         }
         #endregion
 
         #region IScrollInfo support
-        
+
         private double Step => 5;
         private double WheelSize => 3 * Step;
         
@@ -281,7 +310,7 @@ namespace EventsChart
             offset = Math.Max(0, Math.Min(offset, ExtentWidth - ViewportWidth));
             if (offset != _scrollOffset.X)
             {
-                long segmentSize = SegmentSize;
+                long segmentSize = SegmentSize.DisplayedValue;
                 Offset = (long)offset * segmentSize;
                 _scrollOffset = new Point(Offset / segmentSize, _scrollOffset.Y);
             }
@@ -307,7 +336,7 @@ namespace EventsChart
             if (end < start)
                 return;
 
-            double segmentSize = Math.Max(SegmentSize, 1);
+            double segmentSize = Math.Max(SegmentSize.DisplayedValue, 1);
             Size viewport = new Size(ActualWidth, 1);
             Size extent = new Size(Math.Ceiling((end - start) / segmentSize), 1);
             Point scrollOffset = new Point(Math.Max(Offset / segmentSize, 0), 0);

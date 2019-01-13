@@ -8,42 +8,45 @@ using System.Windows;
 using EventsChart.Drawing;
 using EventsDomain;
 using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using EventsProcessingAPI.Enumeration;
 
 namespace EventsChart.ChartData
 {
-    class EventsApiDataAdapter : IDataAdapter
+    class FigureDataAdapterForApi : IFigureDataAdapter
     {
         private readonly BucketContainer _container;
-        public double ChartHeight { get; set; }
-        public long Offset { get; set; }
+        public readonly double _chartHeight;
 
-        public EventsApiDataAdapter(BucketContainer container)
+        public FigureDataAdapterForApi(BucketContainer container, double chartHeight)
         {
             _container = container;
+            _chartHeight = chartHeight;
         }
 
-        public IEnumerable<IFigure> GetFiguresToDraw(long start, long end, long segmentSize)
+        public IEnumerable<IFigure> GetFiguresToDraw(long offset, long width, SegmentSize segmentSize)
         {
-            if (segmentSize > 1)
+            long firstTimestamp = _container.FirstTimestamp;
+            long start = firstTimestamp + offset;
+            long end = firstTimestamp + offset + width * segmentSize.DisplayedValue;
+
+            if (segmentSize.RequestedValue > 1)
             {
-                double[] densities = _container.GetDensities(start, end, segmentSize);
+                double[] densities = _container.GetDensities(start, end, segmentSize.RequestedValue);
                 return GetFiguresFromDensities(densities);
             }
-            else if (segmentSize == 1)
+            else if (segmentSize.RequestedValue == 1)
             {
-                var events = _container.GetRealEvents(start, end);
-                return GetFiguresFromEvents(events, start, end);
+                var events = _container.GetRealEvents(start, end + 1);
+                return GetFiguresFromEvents(events, offset, start, end);
             }
 
             return Enumerable.Empty<IFigure>();
         }
 
-        private IEnumerable<IFigure> GetFiguresFromEvents(RealEventEnumerable events, long startTimestamp, long endTimestamp)
+        private IEnumerable<IFigure> GetFiguresFromEvents(RealEventEnumerable events, long offset, long startTimestamp, long endTimestamp)
         {
-            long offset = Offset;
-            double height = ChartHeight;
-            long startTime = -1, duration = 0;
+            long startEventTime = -1, duration = 0;
             int eventsCount = 0;
 
             var figures = new List<IFigure>();
@@ -53,26 +56,26 @@ namespace EventsChart.ChartData
                 switch (ev.EventType)
                 {
                     case EventType.Start:
-                        startTime = ev.Ticks;
+                        startEventTime = ev.Ticks;
                         break;
                     case EventType.Stop:
-                        if (startTime < 0)
-                            startTime = startTimestamp;
+                        if (startEventTime < 0)
+                            startEventTime = startTimestamp;
 
-                        duration = ev.Ticks - startTime;
+                        duration = ev.Ticks - startEventTime;
                         figures.Add(new Rectangle(
-                            new Rect(Math.Max(startTime - offset, 0), 0, duration, height)
+                            new Rect(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight)
                         ));
-                        startTime = -1;
+                        startEventTime = -1;
                         break;
                 }
                 eventsCount++;
             }
 
-            if (startTime >= 0)
+            if (startEventTime >= 0)
             {
-                duration = endTimestamp - startTime;
-                figures.Add(new Rectangle(new Rect(Math.Max(startTime - offset, 0), 0, duration, height)));
+                duration = endTimestamp - startEventTime;
+                figures.Add(new Rectangle(new Rect(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight)));
             }
 
             return figures;
@@ -80,7 +83,6 @@ namespace EventsChart.ChartData
 
         private IEnumerable<IFigure> GetFiguresFromDensities(double[] densities)
         {
-            int chartHeight = (int)ChartHeight;
             double currentValue = 0, prevValue = 0;
             Point startPoint = default;
             bool isNewFigure = true;
@@ -92,10 +94,10 @@ namespace EventsChart.ChartData
                 if (densities[i] < 0 || densities[i] > 1)
                     throw new ArithmeticException("Density must belong to the range [0; 1]");
 
-                currentValue = chartHeight - (int)(densities[i] * chartHeight);
+                currentValue = _chartHeight - (int)(densities[i] * _chartHeight);
 
                 // if density ~ 0
-                if (currentValue == chartHeight)
+                if (currentValue == _chartHeight)
                 {
                     SetFigureType(ref figureType, points);
                     if (points.Count > 0)
@@ -112,7 +114,7 @@ namespace EventsChart.ChartData
 
                 if (isNewFigure)
                 {
-                    startPoint = new Point(i, chartHeight);
+                    startPoint = new Point(i, _chartHeight);
                 }
 
                 if (!isNewFigure)
@@ -139,7 +141,7 @@ namespace EventsChart.ChartData
 
             if (points.Count > 0)
             {
-                points.Add(new Point(densities.Length - 1, chartHeight));
+                points.Add(new Point(densities.Length - 1, _chartHeight));
                 yield return CreateFigure(figureType, startPoint, points);
             }
         }

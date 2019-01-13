@@ -60,17 +60,19 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChartData\EventsApiDataAdapter.cs" />
-    <Compile Include="ChartData\IDataAdapter.cs" />
+    <Compile Include="ChartData\FigureDataAdapterForApi.cs" />
+    <Compile Include="ChartData\IFigureDataAdapter.cs" />
+    <Compile Include="ChartData\IFigureDataAdapterFactory.cs" />
     <Compile Include="Drawing\IDrawingContext.cs" />
     <Compile Include="Drawing\IFigure.cs" />
     <Compile Include="Drawing\Line.cs" />
     <Compile Include="Drawing\Polyline.cs" />
     <Compile Include="Drawing\Rectangle.cs" />
     <Compile Include="Drawing\StreamGeometryDrawingContext.cs" />
+    <Compile Include="Rendering\ChartUpdater.cs" />
+    <Compile Include="Rendering\Visualizer.cs" />
     <Compile Include="TimeUnitFactors.cs" />
     <Compile Include="TimeLine.cs" />
-    <Compile Include="ChartUpdater.cs" />
     <Compile Include="EventsChart.xaml.cs">
       <DependentUpon>EventsChart.xaml</DependentUpon>
     </Compile>
@@ -89,7 +91,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Visualizer.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

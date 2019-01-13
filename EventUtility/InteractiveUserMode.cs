@@ -1,5 +1,6 @@
 ﻿using EventsDomain;
 using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -56,12 +57,12 @@ namespace EventUtility
 
         private static void ShowChart(BucketContainer container, long start, long end, ushort chartWidth)
         {
-            long[] preferredSizes = container.GetPreferredSegmentSizes(start, end, chartWidth);
+            SegmentSize[] preferredSizes = container.GetPreferredSegmentSizes(start, end, chartWidth);
 
             if (preferredSizes.Length < 1)
                 throw new InvalidOperationException();
 
-            long segmentSize = preferredSizes[preferredSizes.Length - 1];
+            long segmentSize = preferredSizes[preferredSizes.Length - 1].RequestedValue;
             end = start + segmentSize * chartWidth;
             Console.WriteLine("Here are densities for chart of width equal to {0}px", chartWidth);
             

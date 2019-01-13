@@ -1,5 +1,6 @@
 using EventsDomain;
 using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using FunctionalTests.Fixtures;
 using System;
 using System.IO;
@@ -143,8 +144,8 @@ namespace FunctionalTests
             start = container.FirstTimestamp;
             end = container.LastTimestamp;
 
-            long[] segmentSizes = container.GetPreferredSegmentSizes(1000);
-            long segmentSize = segmentSizes.Last();
+            SegmentSize[] segmentSizes = container.GetPreferredSegmentSizes(1000);
+            long segmentSize = segmentSizes.Last().RequestedValue;
 
             var densitiesBySegments = container.GetDensities(start, end, segmentSize);
             var averageDensity = densitiesBySegments.Average();

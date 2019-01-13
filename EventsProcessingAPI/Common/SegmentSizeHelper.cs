@@ -5,22 +5,24 @@ using System.Text;
 
 namespace EventsProcessingAPI.Density
 {
-    internal static class DensityHelper
+    internal static class SegmentSizeHelper
     {
-        public static long[] GetPreferredSegmentSizes(long startTime, long endTime, ushort segmentsCount)
+        public static SegmentSize[] GetPreferredSegmentSizes(long startTime, long endTime, ushort segmentsCount)
         {
             if (endTime < startTime)
                 throw new ArgumentException(nameof(endTime));
 
-            var list = new List<long>();
+            var list = new List<SegmentSize>();
             long maxSegmentSize = (long)Math.Ceiling((endTime - startTime) / (double)segmentsCount);
             TimeUnit currentTimeUnit = TimeUnit.Microsecond;
-            list.Add(1);
             long segmentSize = currentTimeUnit.GetTimeUnitDuration();
+            long previousSegmentSize = segmentSize;
 
-            while (segmentSize <= maxSegmentSize)
+            list.Add(new SegmentSize(1));
+            while (segmentSize < maxSegmentSize)
             {
-                list.Add(segmentSize);
+                previousSegmentSize = segmentSize;
+                list.Add(new SegmentSize(segmentSize));
                 if (GetFirstDigit(segmentSize) == 4)
                     segmentSize = segmentSize / 4 * 10;
                 else
@@ -35,10 +37,7 @@ namespace EventsProcessingAPI.Density
 
             if (segmentSize > maxSegmentSize)
             {
-                if (currentTimeUnit == TimeUnit.Millisecond)
-                    list.Add(maxSegmentSize);
-                else
-                    list.Add(segmentSize);
+                list.Add(new SegmentSize(previousSegmentSize, maxSegmentSize));
             }
             
             return list.ToArray();

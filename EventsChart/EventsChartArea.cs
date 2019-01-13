@@ -1,4 +1,6 @@
-﻿using EventsProcessingAPI;
+﻿using EventsChart.ChartData;
+using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +13,11 @@ using System.Windows.Shapes;
 
 namespace EventsChart
 {
-    internal class EventsChartArea : UserControl, IChartArea
+    internal class EventsChartArea : UserControl, IChartArea, IFigureDataAdapterFactory
     {
         public Canvas Canvas { get; }
         private readonly ChartUpdater _chartUpdater;
+        private IFigureDataAdapter _figureDataAdapter;
 
         public EventsChartArea()
         {
@@ -24,7 +27,7 @@ namespace EventsChart
             };
             Content = Canvas;
 
-            _chartUpdater = new ChartUpdater(this);
+            _chartUpdater = new ChartUpdater(this, this);
 
             SizeChanged += OnSizeChanged;
             Loaded += OnLoaded;
@@ -38,7 +41,7 @@ namespace EventsChart
             nameof(Offset), typeof(long), typeof(EventsChartArea), new PropertyMetadata(0L, GetChartUpdater()));
 
         public static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
-            nameof(SegmentSize), typeof(long), typeof(EventsChartArea), new PropertyMetadata(-1L, GetChartUpdater()));
+            nameof(SegmentSize), typeof(SegmentSize), typeof(EventsChartArea), new PropertyMetadata(new SegmentSize(-1L), GetChartUpdater()));
 
 
         public BucketContainer BucketContainer
@@ -53,9 +56,9 @@ namespace EventsChart
             set { SetValue(OffsetProperty, value); }
         }
 
-        public long SegmentSize
+        public SegmentSize SegmentSize
         {
-            get { return (long)GetValue(SegmentSizeProperty); }
+            get { return (SegmentSize)GetValue(SegmentSizeProperty); }
             set { SetValue(SegmentSizeProperty, value); }
         }
 
@@ -76,7 +79,7 @@ namespace EventsChart
         {
             if (!IsLoaded)
                 return;
-
+            
             InitChart();
             await UpdateChart();
         }
@@ -91,15 +94,16 @@ namespace EventsChart
 
         private async Task UpdateChart()
         {
-            if (!IsLoaded || SegmentSize <= 0)
+            if (!IsVisible || !IsLoaded || SegmentSize.DisplayedValue <= 0)
                 return;
-            
+
             await _chartUpdater.Run();
         }
 
         private void InitChart()
         {
-            Canvas.Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
+            _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, ActualHeight);
+            //Canvas.Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
         }
 
         public void AddToView(FrameworkElement element)
@@ -115,6 +119,11 @@ namespace EventsChart
                 if (wpfChart == null) return;
                 await wpfChart.UpdateChart();
             };
+        }
+
+        IFigureDataAdapter IFigureDataAdapterFactory.Get()
+        {
+            return _figureDataAdapter;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace PerfomanceTest
                 //startTimestamp + 400 * 1000,
                 endTimestamp,
                 //new[] { 10000L }
-                container.GetPreferredSegmentSizes(startTimestamp, endTimestamp, 800)
+                container.GetPreferredSegmentSizes(startTimestamp, endTimestamp, 800).Select(s => s.RequestedValue).Distinct().ToArray()
             );
         }
 

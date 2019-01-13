@@ -4,6 +4,7 @@ using EventsProcessingAPI.Ranges;
 using System;
 using EventsProcessingAPI.Density;
 using EventsProcessingAPI.Enumeration;
+using EventsProcessingAPI.Common;
 
 namespace EventsProcessingAPI
 {
@@ -32,22 +33,22 @@ namespace EventsProcessingAPI
 
         
 
-        public long[] GetPreferredSegmentSizes(ushort segmentsCount)
+        public SegmentSize[] GetPreferredSegmentSizes(ushort segmentsCount)
         {
             var lastBucket = GetLastBucket();
 
             if (lastBucket == null)
-                return Array.Empty<long>();
+                return Array.Empty<SegmentSize>();
 
             var endTime = lastBucket.GetAbsoluteTimeForEvent(lastBucket.GetLastEvent());
             var startTime = FirstTimestamp;
 
-            return DensityHelper.GetPreferredSegmentSizes(startTime, endTime, segmentsCount);
+            return SegmentSizeHelper.GetPreferredSegmentSizes(startTime, endTime, segmentsCount);
         }
 
-        public long[] GetPreferredSegmentSizes(long start, long end, ushort segmentsCount)
+        public SegmentSize[] GetPreferredSegmentSizes(long start, long end, ushort segmentsCount)
         {
-            return DensityHelper.GetPreferredSegmentSizes(start, end, segmentsCount);
+            return SegmentSizeHelper.GetPreferredSegmentSizes(start, end, segmentsCount);
         }
 
         public Bucket GetFirstBucket()
