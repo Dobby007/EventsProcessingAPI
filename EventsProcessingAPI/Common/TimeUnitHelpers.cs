@@ -71,6 +71,8 @@ namespace EventsProcessingAPI.Common
         {
             switch (timeUnit)
             {
+                case TimeUnit.CpuTick:
+                    return "tick";
                 case TimeUnit.Microsecond:
                     return "μs";
                 case TimeUnit.Millisecond:

@@ -59,7 +59,6 @@ namespace EventsProcessingAPI.Density
             var densities = new double[totalSegments];
 
             int processedSegmentsUsingHints = -1;
-            long processedSegmentSize = 0;
             try
             {
                 checked
@@ -69,8 +68,7 @@ namespace EventsProcessingAPI.Density
                         end - container.FirstTimestamp,
                         segmentSize,
                         densities,
-                        out processedSegmentsUsingHints,
-                        out processedSegmentSize
+                        out processedSegmentsUsingHints
                     );
                 }
             }
@@ -91,23 +89,13 @@ namespace EventsProcessingAPI.Density
                 return densities;
 
             start += processedSegmentsUsingHints * segmentSize;
+            
 
-
-            int fullyCalculatedDensitiesCount = processedSegmentSize == segmentSize
-                ? processedSegmentsUsingHints
-                : 0;
-
-
-
-            Parallel.ForEach(GetPartitions(start, segmentSize, densities.AsSpan(fullyCalculatedDensitiesCount)), (partition) =>
+            Parallel.ForEach(GetPartitions(start, segmentSize, densities.AsSpan(processedSegmentsUsingHints)), (partition) =>
             {
-                Span<double> batch = densities.AsSpan(fullyCalculatedDensitiesCount)
+                Span<double> batch = densities.AsSpan(processedSegmentsUsingHints)
                     .Slice(partition.leftBoundary, partition.batchLength);
-
-                PartialDensitiesParameters partialDensities = default;
-                if (fullyCalculatedDensitiesCount == 0 && processedSegmentsUsingHints > 0)
-                    partialDensities = new PartialDensitiesParameters(processedSegmentSize, processedSegmentsUsingHints - partition.leftBoundary);
-
+                
                 DensityCalculator.CalculateDensities(
                     container.Buckets,
                     new DensityCalculationRequest(partition.start, partition.end, segmentSize),

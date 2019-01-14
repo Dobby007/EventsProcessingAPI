@@ -23,10 +23,25 @@ namespace EventsProcessingAPI.Density
             {
                 previousSegmentSize = segmentSize;
                 list.Add(new SegmentSize(segmentSize));
-                if (GetFirstDigit(segmentSize) == 4)
-                    segmentSize = segmentSize / 4 * 10;
-                else
-                    segmentSize *= 2;
+                switch (currentTimeUnit)
+                {
+                    case TimeUnit.Second:
+                    case TimeUnit.Minute:
+                        if (segmentSize % (20 * currentTimeUnit.GetTimeUnitDuration()) == 0)
+                            segmentSize = segmentSize / 20 * 30;
+                        else if (GetFirstDigit(segmentSize) == 4)
+                            segmentSize = segmentSize / 4 * 10;
+                        else
+                            segmentSize *= 2;
+                        break;
+                    default:
+                        if (GetFirstDigit(segmentSize) == 4)
+                            segmentSize = segmentSize / 4 * 10;
+                        else
+                            segmentSize *= 2;
+                        break;
+                }
+                
 
                 TimeUnit nextTimeUnit = (TimeUnit)((byte)currentTimeUnit << 1);
                 if (currentTimeUnit < TimeUnit.Hour && segmentSize >= nextTimeUnit.GetTimeUnitDuration())

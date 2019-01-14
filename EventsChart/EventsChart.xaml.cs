@@ -73,7 +73,7 @@ namespace EventsChart
             nameof(BucketContainer), typeof(BucketContainer), typeof(EventsChart), new PropertyMetadata(OnBucketContainerChanged));
 
         public static readonly DependencyProperty OffsetProperty = DependencyProperty.Register(
-            nameof(Offset), typeof(long), typeof(EventsChart), new PropertyMetadata(-1L, null, CoerceOffset));
+            nameof(Offset), typeof(long), typeof(EventsChart), new PropertyMetadata(0L, null, CoerceOffset));
 
 
         public static readonly DependencyProperty DisplayedSegmentSizeProperty = DependencyProperty.Register(

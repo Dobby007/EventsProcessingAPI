@@ -63,9 +63,7 @@ namespace EventsChart.ChartData
                             startEventTime = startTimestamp;
 
                         duration = ev.Ticks - startEventTime;
-                        figures.Add(new Rectangle(
-                            new Rect(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight)
-                        ));
+                        figures.Add(CreateFigure(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight));
                         startEventTime = -1;
                         break;
                 }
@@ -75,7 +73,7 @@ namespace EventsChart.ChartData
             if (startEventTime >= 0)
             {
                 duration = endTimestamp - startEventTime;
-                figures.Add(new Rectangle(new Rect(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight)));
+                figures.Add(CreateFigure(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight));
             }
 
             return figures;
@@ -160,6 +158,16 @@ namespace EventsChart.ChartData
                 default:
                     throw new ArgumentOutOfRangeException(nameof(figureType), figureType, "Unknown figure type");
             }
+        }
+
+        private IFigure CreateFigure(double x, double y, double width, double height)
+        {
+            if (width == 1)
+            {
+                return new Line(new Point(x, y), new Point(x, height));
+            }
+
+            return new Rectangle(new Rect(x, y, width, height));
         }
 
         private void SetFigureType(ref FigureType figureType, IList<Point> points)

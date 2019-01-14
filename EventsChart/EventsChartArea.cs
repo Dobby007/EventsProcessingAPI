@@ -29,6 +29,7 @@ namespace EventsChart
 
             _chartUpdater = new ChartUpdater(this, this);
 
+            
             SizeChanged += OnSizeChanged;
             Loaded += OnLoaded;
         }
@@ -103,7 +104,7 @@ namespace EventsChart
         private void InitChart()
         {
             _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, ActualHeight);
-            //Canvas.Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
+            Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
         }
 
         public void AddToView(FrameworkElement element)

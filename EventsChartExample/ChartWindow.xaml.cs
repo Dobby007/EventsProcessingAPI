@@ -1,4 +1,5 @@
 ﻿using EventsProcessingAPI;
+using EventsProcessingAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -47,7 +48,10 @@ namespace EventsChartExample
         private void ShowZoomInfo()
         {
             _timer.Stop();
-            ZoomInfoLabel.Content = $"Segment size: {SegmentSize}";
+            TimeUnit timeUnit = TimeUnitHelpers.GetFloorTimeUnit(SegmentSize);
+            double segmentSizeInTimeUnits = SegmentSize / (double)timeUnit.GetTimeUnitDuration();
+
+            ZoomInfoLabel.Content = $"Segment size: {SegmentSize} ({segmentSizeInTimeUnits, 0:0.##}{timeUnit.GetTimeUnitAsString()})";
             ZoomInfoPanel.Visibility = Visibility.Visible;
             _timer.Start();
         }

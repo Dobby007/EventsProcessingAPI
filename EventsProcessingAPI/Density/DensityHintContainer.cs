@@ -20,7 +20,7 @@ namespace EventsProcessingAPI.Density
         internal TreeDictionary<uint, double> Minutes => _minutes;
 
         public DensityHintContainer(
-            TreeDictionary<uint, double> seconds, 
+            TreeDictionary<uint, double> seconds,
             TreeDictionary<uint, double> minutes)
         {
             _seconds = seconds;
@@ -36,32 +36,25 @@ namespace EventsProcessingAPI.Density
         /// <param name="end"></param>
         /// <param name="segmentSize"></param>
         /// <returns></returns>
-        public bool TrySetDensitiesUsingHints(
-            long start, 
-            long end, 
-            long segmentSize, 
-            double[] targetBuffer, 
-            out int processedSegmentsCount, 
-            out long processedSegmentSize)
+        public bool TrySetDensitiesUsingHints(long start, long end, long segmentSize, double[] targetBuffer, out int totalSegments)
         {
-            // we can't use hints if segment size is lesser than 1 second
-            if (segmentSize < TimeUnitDurations.Second)
+            // we can't use hints if segment size is lesser than 1s
+            if (segmentSize < 10_000_000)
             {
-                processedSegmentSize = 0;
-                processedSegmentsCount = 0;
+                totalSegments = 0;
                 return false;
             }
 
-            if (!TryGetMaxDensityHintTimeUnit(segmentSize, out TimeUnit densityHintType, out processedSegmentSize))
+            if (!TryGetMaxDensityHintTimeUnit(segmentSize, out TimeUnit densityHintType))
             {
-                processedSegmentsCount = 0;
+                totalSegments = 0;
                 return false;
             }
 
 
             long duration = densityHintType.GetTimeUnitDuration();
 
-            ushort hintCount = checked((ushort)(processedSegmentSize / duration));
+            ushort hintCount = checked((ushort)(segmentSize / duration));
             uint startInTimeUnits = checked((uint)(start / duration));
             uint endInTimeUnits = checked((uint)(start / duration));
 
@@ -71,7 +64,7 @@ namespace EventsProcessingAPI.Density
                 targetBuffer[index] = GetAverageDensity(startInTimeUnits + (uint)(index * hintCount) + 1, hintCount, densityHintType);
             }
 
-            processedSegmentsCount = segmentsCount;
+            totalSegments = segmentsCount;
             return true;
         }
 
@@ -97,28 +90,24 @@ namespace EventsProcessingAPI.Density
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool TryGetMaxDensityHintTimeUnit(long segmentSize, out TimeUnit timeUnit, out long maxSegmentSize)
+        private static bool TryGetMaxDensityHintTimeUnit(long segmentSize, out TimeUnit timeUnit)
         {
-            double floatSegmentSize = segmentSize, hintsCountPerOneSegment = 0;
-            if ((hintsCountPerOneSegment = floatSegmentSize / TimeUnitDurations.Minute) >= 1)
+            if (segmentSize % 600_000_000 == 0)
             {
-                maxSegmentSize = (long)Math.Floor(hintsCountPerOneSegment) * TimeUnitDurations.Minute;
                 timeUnit = TimeUnit.Minute;
                 return true;
-            } 
-            else if ((hintsCountPerOneSegment = floatSegmentSize / TimeUnitDurations.Second) >= 1)
+            }
+            else if (segmentSize % 10_000_000 == 0)
             {
-                maxSegmentSize = (long)Math.Floor(hintsCountPerOneSegment) * TimeUnitDurations.Second;
                 timeUnit = TimeUnit.Second;
                 return true;
             }
 
-            maxSegmentSize = default;
             timeUnit = default;
             return false;
         }
 
-        
-        
+
+
     }
 }
