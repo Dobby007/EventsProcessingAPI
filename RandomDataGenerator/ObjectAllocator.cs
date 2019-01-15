@@ -14,7 +14,7 @@ namespace RandomDataGenerator
     {
         private const int MaxFilesNumber = 32;
         private const int MaxReadAttempts = 64;
-        private Thread _watcherThread;
+        private Thread _allocThread;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly AllocationMode _allocationMode;
 
@@ -35,16 +35,21 @@ namespace RandomDataGenerator
 
             AllocationCompleted = false;
             _cancellationTokenSource = new CancellationTokenSource();
-            _watcherThread = new Thread(StartAllocation);
-            _watcherThread.IsBackground = true;
-            _watcherThread.Start(_cancellationTokenSource.Token);
+            _allocThread = new Thread(StartAllocation);
+            _allocThread.IsBackground = true;
+            _allocThread.Start(_cancellationTokenSource.Token);
         }
 
         public void Stop()
         {
             _cancellationTokenSource?.Cancel();
-            _watcherThread = null;
+            _allocThread = null;
             GC.Collect();
+        }
+
+        public void Wait()
+        {
+            _allocThread.Join();
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization)]
@@ -85,7 +90,7 @@ namespace RandomDataGenerator
 
                     using (var writer = new StreamWriter(stream, Encoding.UTF8, 1024, stream is MemoryStream))
                     {
-                        foreach (var number in Enumerable.Range(0, byte.MaxValue))
+                        foreach (var number in Enumerable.Range(0, ushort.MaxValue))
                         {
                             string finalString = "";
                             foreach (var s in Enumerable.Repeat(number.ToString(), byte.MaxValue))
@@ -118,6 +123,7 @@ namespace RandomDataGenerator
                     {
                         //GC.Collect();
                     }
+                    GC.Collect();
                 }
                 catch (OutOfMemoryException)
                 {

@@ -32,8 +32,7 @@ namespace RandomDataGenerator
                 watcher.OnGarbageCollectionEnded += AddStopEvent;
                 watcher.Start();
 
-                var heavyMetal = new ObjectAllocator(_allocationMode);
-                heavyMetal.Start();
+                
 
                 var timer = new Timer(state =>
                 {

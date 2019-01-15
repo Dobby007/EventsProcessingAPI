@@ -12,12 +12,12 @@
         <GroupBox Header="Выберите файл для загрузки">
             <DockPanel LastChildFill="True" HorizontalAlignment="Stretch" Margin="0,1">
                 <Button x:Name="SelectFileBtn" Width="20" Content="..." Margin="5,0,0,0" DockPanel.Dock="Right" HorizontalAlignment="Right" Click="SelectFileBtn_Click"/>
-                <TextBox x:Name="SelectiFilePath" Width="Auto" IsEnabled="False" Text="C:\Projects\eventsprocessingapi\Data\events.bin" />
+                <TextBox x:Name="SelectiFilePath" Width="Auto" IsEnabled="False" Text="" />
             </DockPanel>
         </GroupBox>
 
         <ProgressBar x:Name="LoadProgress" Margin="5,10" Height="20" Visibility="Collapsed"></ProgressBar>
-        <Button x:Name="LoadBtn" Content="Загрузить" Height="25" Margin="5,5,5,10" IsEnabled="True" Click="LoadBtn_Click"></Button>
+        <Button x:Name="LoadBtn" Content="Загрузить" Height="25" Margin="5,5,5,10" IsEnabled="False" Click="LoadBtn_Click"></Button>
     </StackPanel>
 
 </Window>

@@ -39,12 +39,13 @@ namespace RandomDataGenerator
             var timestamp = _ticker.Peek();
             _generationThread = new Thread(() => 
             {
+                var timeRandomizer = new Random();
                 for (var i = 0; i <= desiredEventsCount; i = i + 2)
                 {
-                    timestamp += (long)(_randomizer.NextDouble() * _maxEventsInterval) + 1;
+                    timestamp += (long)(timeRandomizer.NextDouble() * _maxEventsInterval) + 1;
                     AddStartEvent(timestamp);
 
-                    timestamp += (long)(_randomizer.NextDouble() * _maxDuration) + 1;
+                    timestamp += (long)(timeRandomizer.NextDouble() * _maxDuration) + 1;
                     AddStopEvent(timestamp);
                 }
             });

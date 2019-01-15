@@ -10,7 +10,7 @@ namespace RandomDataGenerator
     abstract class DataGenerator
     {
         protected readonly string _filename;
-        protected readonly Random _randomizer = new Random();
+        private readonly Random _randomizer = new Random();
         protected readonly TicksGetter _ticker = new TicksGetter();
         protected readonly ConcurrentQueue<RealEvent> _queue = new ConcurrentQueue<RealEvent>();
         protected readonly AutoResetEvent _eventsBatchGenerated = new AutoResetEvent(false);

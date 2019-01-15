@@ -1,7 +1,12 @@
-﻿using System;
+﻿using Microsoft.Diagnostics.Tracing;
+using Microsoft.Diagnostics.Tracing.Parsers;
+using Microsoft.Diagnostics.Tracing.Parsers.Clr;
+using Microsoft.Diagnostics.Tracing.Session;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.IO;
+using System.Reactive.Linq;
 using System.Threading;
 
 namespace RandomDataGenerator
@@ -10,7 +15,7 @@ namespace RandomDataGenerator
     {
         private volatile bool _isStarted = false;
         private Thread _watcherThread;
-
+        private volatile TraceEventSession _traceEventSession;
         public event Action OnGarbageCollectionStarted;
         public event Action OnGarbageCollectionEnded;
 
@@ -22,16 +27,6 @@ namespace RandomDataGenerator
             if (_isStarted)
                 return;
 
-            try
-            {
-                GC.RegisterForFullGCNotification(10, 10);
-            }
-            catch (InvalidOperationException invalidOp)
-            {
-                Console.WriteLine("GC Notifications are not supported while concurrent GC is enabled.\n"
-                    + invalidOp.Message);
-            }
-
             _isStarted = true;
             _watcherThread = new Thread(WatchForGC);
             _watcherThread.IsBackground = true;
@@ -40,55 +35,31 @@ namespace RandomDataGenerator
         
         private void WatchForGC()
         {
-            while (_isStarted)
+
+            using (var userSession = new TraceEventSession("ObserveGCCollections"))
             {
-                
-                // Check for a notification of an approaching collection.
-                GCNotificationStatus s = GC.WaitForFullGCApproach();
+                // enable the CLR provider with default keywords (minus the rundown CLR events)
+                userSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
+                    (ulong)(ClrTraceEventParser.Keywords.GC));
 
-                if (!_isStarted)
-                    return;
+                userSession.Source.Clr.GCSuspendEEStop += Clr_GCSuspendEEStop;
+                userSession.Source.Clr.GCRestartEEStop += Clr_GCRestartEEStop;
 
-                if (s == GCNotificationStatus.Succeeded)
-                {
-                    //Console.WriteLine("GC Notification raised.");
-                    OnGarbageCollectionStarted?.Invoke();
-                }
-                else if (s == GCNotificationStatus.Canceled)
-                {
-                    Console.WriteLine("GC Notification cancelled.");
-                    break;
-                }
-                else
-                {
-                    // This can occur if a timeout period
-                    // is specified for WaitForFullGCApproach(Timeout) 
-                    // or WaitForFullGCComplete(Timeout)  
-                    // and the time out period has elapsed. 
-                    Console.WriteLine("GC Notification not applicable.");
-                    break;
-                }
+                _traceEventSession = userSession;
 
-                // Check for a notification of a completed collection.
-                GCNotificationStatus status = GC.WaitForFullGCComplete();
-                if (status == GCNotificationStatus.Succeeded)
-                {
-                    //Console.WriteLine("GC Notification raised.");
-                    OnGarbageCollectionEnded?.Invoke();
-                }
-                else if (status == GCNotificationStatus.Canceled)
-                {
-                    Console.WriteLine("GC Notification cancelled.");
-                    break;
-                }
-                else
-                {
-                    // Could be a time out.
-                    Console.WriteLine("GC Notification not applicable.");
-                    break;
-                }
+                // OK we are all set up, time to listen for events and pass them to the observers.  
+                userSession.Source.Process();
             }
+        }
 
+        private void Clr_GCRestartEEStop(GCNoUserDataTraceData obj)
+        {
+            OnGarbageCollectionEnded?.Invoke();
+        }
+
+        private void Clr_GCSuspendEEStop(GCNoUserDataTraceData obj)
+        {
+            OnGarbageCollectionStarted?.Invoke();
         }
 
         #region IDisposable Support
