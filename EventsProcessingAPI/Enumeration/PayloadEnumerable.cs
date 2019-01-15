@@ -11,6 +11,8 @@ namespace EventsProcessingAPI.Enumeration
         {
         }
 
+        public static PayloadEnumerable Empty { get; } = new PayloadEnumerable(Memory<Bucket>.Empty, 0, 0);
+
         public PayloadEnumerator GetEnumerator()
         {
             return new PayloadEnumerator(_buckets.Span, _firstEventIndex, _lastEventIndex);

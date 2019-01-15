@@ -63,7 +63,7 @@ namespace EventsProcessingAPI
 
         public EventEnumerable GetEvents(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
+            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end), includeEventsOutOfRange);
             if (!range.IsFound)
                 return EventEnumerable.Empty;
 
@@ -76,7 +76,7 @@ namespace EventsProcessingAPI
 
         public RealEventEnumerable GetRealEvents(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end, FirstTimestamp), includeEventsOutOfRange);
+            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end), includeEventsOutOfRange);
             if (!range.IsFound)
                 return RealEventEnumerable.Empty;
 
@@ -89,9 +89,9 @@ namespace EventsProcessingAPI
         
         public PayloadEnumerable GetPayloads(long start, long end, bool includeEventsOutOfRange = true)
         {
-            var range = RangeSelector.GetRange(Buckets, start, end);
+            var range = EventsSelector.GetRangeWithEvents(Buckets, new RangeRequest(start, end), includeEventsOutOfRange);
             if (!range.IsFound)
-                throw new RangeNotFoundException();
+                return PayloadEnumerable.Empty;
 
             return new PayloadEnumerable(
                 new Memory<Bucket>(Buckets, range.FirstBucketIndex, range.Length),

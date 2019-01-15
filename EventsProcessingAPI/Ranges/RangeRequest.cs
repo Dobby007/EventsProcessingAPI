@@ -22,5 +22,17 @@ namespace EventsProcessingAPI.Ranges
             End = end;
             FirstTimeStamp = firstTimeStamp;
         }
+
+        /// <summary>
+        /// Creates request for searching a range of events
+        /// </summary>
+        /// <param name="start">Start time (inclusive)</param>
+        /// <param name="end">Start time (exclusive)</param>
+        public RangeRequest(long start, long end)
+        {
+            Start = start;
+            End = end;
+            FirstTimeStamp = 0;
+        }
     }
 }

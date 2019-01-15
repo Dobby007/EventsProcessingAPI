@@ -36,7 +36,7 @@ namespace EventsChart
                     StrokeThickness = 1,
                     Fill = _lineBrush
                 };
-                _chartArea.AddToView(_path);
+                _chartArea.AddToArea(_path);
             }
             
 

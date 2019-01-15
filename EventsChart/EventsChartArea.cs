@@ -3,6 +3,7 @@ using EventsProcessingAPI;
 using EventsProcessingAPI.Common;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,23 +17,35 @@ namespace EventsChart
     internal class EventsChartArea : UserControl, IChartArea, IFigureDataAdapterFactory
     {
         public Canvas Canvas { get; }
+        public Canvas WrappingCanvas { get; }
         private readonly ChartUpdater _chartUpdater;
         private IFigureDataAdapter _figureDataAdapter;
+        private Tooltip _tooltip;
+        private long _firstTimestamp;
 
         public EventsChartArea()
         {
-            Canvas = new Canvas() {
+            WrappingCanvas = new Canvas() {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
-            Content = Canvas;
+            Canvas = new Canvas();
+            WrappingCanvas.Children.Add(Canvas);
+
+            Content = WrappingCanvas;
 
             _chartUpdater = new ChartUpdater(this, this);
 
-            
+            _tooltip = new Tooltip(this);
+            AddUiElement(_tooltip);
+
+            MouseMove += EventsChartArea_MouseMove;
+            MouseLeave += EventsChartArea_MouseLeave;
             SizeChanged += OnSizeChanged;
             Loaded += OnLoaded;
         }
+
+        
 
         #region Properties
         public static readonly DependencyProperty BucketContainerProperty = DependencyProperty.Register(
@@ -44,11 +57,23 @@ namespace EventsChart
         public static readonly DependencyProperty SegmentSizeProperty = DependencyProperty.Register(
             nameof(SegmentSize), typeof(SegmentSize), typeof(EventsChartArea), new PropertyMetadata(new SegmentSize(-1L), GetChartUpdater()));
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+
+            var handler = PropertyChanged;
+            handler?.Invoke(this, new PropertyChangedEventArgs(e.Property.Name));
+        }
 
         public BucketContainer BucketContainer
         {
             get { return (BucketContainer)GetValue(BucketContainerProperty); }
-            set { SetValue(BucketContainerProperty, value); }
+            set
+            {
+                SetValue(BucketContainerProperty, value);
+            }
         }
 
         public long Offset
@@ -71,7 +96,7 @@ namespace EventsChart
         #region Events
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            InitChart();
+            UpdateAreaSize();
             
             await UpdateChart();
         }
@@ -81,7 +106,7 @@ namespace EventsChart
             if (!IsLoaded)
                 return;
             
-            InitChart();
+            UpdateAreaSize();
             await UpdateChart();
         }
 
@@ -89,7 +114,24 @@ namespace EventsChart
         {
             var wpfChart = obj as EventsChartArea;
             if (wpfChart == null) return;
+            wpfChart._firstTimestamp = ((BucketContainer)args.NewValue).FirstTimestamp;
             await wpfChart.UpdateChart();
+        }
+
+        private void EventsChartArea_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            _tooltip.Hide();
+        }
+
+        private void EventsChartArea_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            var position = e.GetPosition(this);
+
+            long start = _firstTimestamp + Offset + (long)(SegmentSize.DisplayedValue * position.X);
+            long end = start + SegmentSize.DisplayedValue + 1;
+            var payloads = BucketContainer.GetPayloads(start, end);
+
+            _tooltip.Show(position.X, position.Y, payloads.Count);
         }
         #endregion
 
@@ -101,13 +143,23 @@ namespace EventsChart
             await _chartUpdater.Run();
         }
 
-        private void InitChart()
+        private void UpdateAreaSize()
         {
             _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, ActualHeight);
             Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
+
+            Canvas.SetLeft(Canvas, 0);
+            Canvas.SetTop(Canvas, 0);
+            Canvas.Width = ActualWidth;
+            Canvas.Height = ActualHeight;
         }
 
-        public void AddToView(FrameworkElement element)
+        public void AddUiElement(FrameworkElement element)
+        {
+            WrappingCanvas.Children.Add(element);
+        }
+
+        public void AddToArea(FrameworkElement element)
         {
             Canvas.Children.Add(element);
         }
