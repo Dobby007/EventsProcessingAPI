@@ -54,20 +54,20 @@ namespace RandomDataGenerator
         
         private void StartDataExtrapolation(int desiredEventsCount)
         {
+            desiredEventsCount -= _allEvents.Count;
+            if (desiredEventsCount <= 0)
+            {
+                _extrapolationCompleted = true;
+                return;
+            }
+
             var thread = new Thread(() =>
             {
                 var random = new Random();
                 var spinWait = new SpinWait();
                 int totalEventsGenerated = 0;
                 long lastEventTime = _allEvents[_allEvents.Count - 1].Ticks;
-                desiredEventsCount -= _allEvents.Count;
-
-                if (desiredEventsCount <= 0)
-                {
-                    _extrapolationCompleted = true;
-                    return;
-                }
-
+                
                 Console.WriteLine("\nExtrapolation started...");
 
                 while (totalEventsGenerated < desiredEventsCount)

@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace EventsChart
+namespace EventsChart.Rendering
 {
     internal class ChartUpdater
     {
+        private RenderingRequest _lastRenderingRequest;
         private readonly Visualizer _visualizer;
         private readonly IChartArea _chartArea;
         private readonly IFigureDataAdapterFactory _dataAdapterFactory;
@@ -23,16 +24,44 @@ namespace EventsChart
         }
 
 
-        public async Task Run()
+        public void Run()
         {          
             var segmentSize = _chartArea.SegmentSize;
+            var offset = _chartArea.Offset;
+            var width = _chartArea.Width;
 
             var dataAdapter = _dataAdapterFactory.Get();
             if (dataAdapter == null)
                 return;
 
-            var figures = dataAdapter.GetFiguresToDraw(_chartArea.Offset, _chartArea.Width, segmentSize);
-            _visualizer.Redraw(figures);
+            double translateX = 0;
+            if (_lastRenderingRequest.Covers(offset, segmentSize, width))
+            {
+                translateX = (offset - _lastRenderingRequest.Offset) / (double)-segmentSize.DisplayedValue;
+            }
+            else
+            {
+                long bufferedOffset = Math.Max(0, offset - segmentSize.DisplayedValue * 2 * width);
+                translateX = (bufferedOffset - offset) / (double)segmentSize.DisplayedValue;
+
+                var request = new RenderingRequest(bufferedOffset, segmentSize, width * 5);
+
+                var figures = dataAdapter.GetFiguresToDraw(
+                    request.Offset,
+                    request.Width,
+                    segmentSize);
+
+                _visualizer.Redraw(figures);
+
+                _lastRenderingRequest = request;
+            }
+
+            var translateTransform = _chartArea.Canvas.RenderTransform as TranslateTransform;
+            if (translateTransform == null)
+                _chartArea.Canvas.RenderTransform = translateTransform = new TranslateTransform(0, 0);
+
+            translateTransform.X = translateX;
+            
 
             if (segmentSize.NeedToScale)
             {

@@ -1,4 +1,5 @@
 ﻿using EventsChart.ChartData;
+using EventsChart.Rendering;
 using EventsProcessingAPI;
 using EventsProcessingAPI.Common;
 using System;
@@ -94,28 +95,28 @@ namespace EventsChart
         #endregion
 
         #region Events
-        private async void OnLoaded(object sender, RoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
             UpdateAreaSize();
             
-            await UpdateChart();
+            UpdateChart();
         }
 
-        private async void OnSizeChanged(object sender, SizeChangedEventArgs args)
+        private void OnSizeChanged(object sender, SizeChangedEventArgs args)
         {
             if (!IsLoaded)
                 return;
             
             UpdateAreaSize();
-            await UpdateChart();
+            UpdateChart();
         }
 
-        private static async void OnBucketContainerChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnBucketContainerChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
             var wpfChart = obj as EventsChartArea;
             if (wpfChart == null) return;
             wpfChart._firstTimestamp = ((BucketContainer)args.NewValue).FirstTimestamp;
-            await wpfChart.UpdateChart();
+            wpfChart.UpdateChart();
         }
 
         private void EventsChartArea_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
@@ -135,12 +136,12 @@ namespace EventsChart
         }
         #endregion
 
-        private async Task UpdateChart()
+        private void UpdateChart()
         {
             if (!IsVisible || !IsLoaded || SegmentSize.DisplayedValue <= 0)
                 return;
 
-            await _chartUpdater.Run();
+            _chartUpdater.Run();
         }
 
         private void UpdateAreaSize()
@@ -170,7 +171,7 @@ namespace EventsChart
             {
                 var wpfChart = o as EventsChartArea;
                 if (wpfChart == null) return;
-                await wpfChart.UpdateChart();
+                wpfChart.UpdateChart();
             };
         }
 

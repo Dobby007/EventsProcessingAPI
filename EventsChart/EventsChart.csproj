@@ -70,6 +70,7 @@
     <Compile Include="Drawing\Rectangle.cs" />
     <Compile Include="Drawing\StreamGeometryDrawingContext.cs" />
     <Compile Include="Rendering\ChartUpdater.cs" />
+    <Compile Include="Rendering\RenderingRequest.cs" />
     <Compile Include="Rendering\Visualizer.cs" />
     <Compile Include="TimeUnitFactors.cs" />
     <Compile Include="TimeLine.cs" />
