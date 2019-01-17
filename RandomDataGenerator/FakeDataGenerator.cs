@@ -14,23 +14,25 @@ namespace RandomDataGenerator
 
         private readonly uint _maxEventsInterval;
         private readonly uint _maxDuration;
-
+        private readonly int _desiredEventsCount;
         /// <summary>
         /// Generator of the fake events
         /// </summary>
         /// <param name="filename">Path to the generated file</param>
+        /// <param name="desiredEventsCount">Desired number of events in the generated file</param>
         /// <param name="maxEventsInterval">Max interval between stop and start events</param>
         /// <param name="maxDuration">Max interval between start and stop events</param>
-        public FakeDataGenerator(string filename, uint maxEventsInterval = 10_000, uint maxDuration = 1_000)
+        public FakeDataGenerator(string filename, int desiredEventsCount, uint maxEventsInterval = 10_000, uint maxDuration = 1_000)
             : base(filename)
         {
+            _desiredEventsCount = desiredEventsCount;
             _maxEventsInterval = maxEventsInterval;
             _maxDuration = maxDuration;
         }
 
-        public void GenerateFile(int desiredEventsCount)
+        public void GenerateFile()
         {
-            StartFakeDataGeneration(desiredEventsCount);
+            StartFakeDataGeneration(_desiredEventsCount);
             WriteFile(() => _generationThread.IsAlive, false);
         }
         

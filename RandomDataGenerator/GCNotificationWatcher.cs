@@ -16,50 +16,53 @@ namespace RandomDataGenerator
         private volatile bool _isStarted = false;
         private Thread _watcherThread;
         private volatile TraceEventSession _traceEventSession;
-        public event Action OnGarbageCollectionStarted;
-        public event Action OnGarbageCollectionEnded;
+        public event Action<long> OnGarbageCollectionStarted;
+        public event Action<long> OnGarbageCollectionEnded;
+        private int _targetProcessId = -1;
 
-        public void Start()
+        public void Start(int targetProcessId)
         {
             if (disposedValue)
                 throw new ObjectDisposedException(nameof(GCNotificationWatcher));
-
             if (_isStarted)
                 return;
 
+            _targetProcessId = targetProcessId;
             _isStarted = true;
             _watcherThread = new Thread(WatchForGC);
             _watcherThread.IsBackground = true;
             _watcherThread.Start();
-}
+        }
         
         private void WatchForGC()
         {
 
-            using (var userSession = new TraceEventSession("ObserveGCCollections"))
+            using (_traceEventSession = new TraceEventSession("ObserveGCCollections"))
             {
-                // enable the CLR provider with default keywords (minus the rundown CLR events)
-                userSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
-                    (ulong)(ClrTraceEventParser.Keywords.GC));
+                // enable CLR provider to capture only GC events
+                _traceEventSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
+                    (ulong)ClrTraceEventParser.Keywords.GC);
 
-                userSession.Source.Clr.GCSuspendEEStop += Clr_GCSuspendEEStop;
-                userSession.Source.Clr.GCRestartEEStop += Clr_GCRestartEEStop;
-
-                _traceEventSession = userSession;
-
-                // OK we are all set up, time to listen for events and pass them to the observers.  
-                userSession.Source.Process();
+                // initialize observers
+                _traceEventSession.Source.Clr.GCSuspendEEStop += Clr_GCSuspendEEStop;
+                _traceEventSession.Source.Clr.GCRestartEEStop += Clr_GCRestartEEStop;
+                
+                // start listening to incoming events from CLR
+                _traceEventSession.Source.Process();
+                
             }
         }
 
         private void Clr_GCRestartEEStop(GCNoUserDataTraceData obj)
         {
-            OnGarbageCollectionEnded?.Invoke();
+            if (_targetProcessId == obj.ProcessID)
+                OnGarbageCollectionEnded?.Invoke((long)(obj.TimeStampRelativeMSec * 10_000));
         }
 
         private void Clr_GCSuspendEEStop(GCNoUserDataTraceData obj)
         {
-            OnGarbageCollectionStarted?.Invoke();
+            if (_targetProcessId == obj.ProcessID)
+                OnGarbageCollectionStarted?.Invoke((long)(obj.TimeStampRelativeMSec * 10_000));
         }
 
         #region IDisposable Support
@@ -71,6 +74,7 @@ namespace RandomDataGenerator
             {
                 if (disposing)
                 {
+                    _traceEventSession?.Stop();
                     _isStarted = false;
                 }
                 

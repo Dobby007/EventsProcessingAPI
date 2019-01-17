@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommandLine;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -6,12 +7,13 @@ using System.Text;
 
 namespace RandomDataGenerator
 {
-    public static class AllocationManager
+    internal static class AllocationManager
     {
-        public static void StartProcess()
+        public static Process StartProcess(AllocateOptions options)
         {
             var filePath = Assembly.GetEntryAssembly().Location;
-            Process.Start(filePath, );
+            var argsStr = Parser.Default.FormatCommandLine(options);
+            return Process.Start(filePath, argsStr);
         }
     }
 }

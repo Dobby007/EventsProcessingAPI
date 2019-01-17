@@ -19,5 +19,10 @@ namespace EventsDomain
             EventType = eventType;
             Ticks = ticks;
         }
+
+        public override string ToString()
+        {
+            return $"Event type={(EventType == EventType.Start ? "Start" : "Stop")}, time = {Ticks}";
+        }
     }
 }

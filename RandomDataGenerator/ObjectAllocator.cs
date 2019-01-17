@@ -18,8 +18,8 @@ namespace RandomDataGenerator
         private CancellationTokenSource _cancellationTokenSource;
         private readonly AllocationMode _allocationMode;
 
-        public bool IsRunning => !(_cancellationTokenSource?.IsCancellationRequested ?? true);
-        public bool AllocationCompleted { get; private set; }
+        public bool IsRunning => !(_cancellationTokenSource?.IsCancellationRequested ?? true) && !_allocationCompleted;
+        private volatile bool _allocationCompleted = false;
 
 
         public ObjectAllocator(AllocationMode allocationMode)
@@ -33,7 +33,7 @@ namespace RandomDataGenerator
             if (IsRunning)
                 return;
 
-            AllocationCompleted = false;
+            _allocationCompleted = false;
             _cancellationTokenSource = new CancellationTokenSource();
             _allocThread = new Thread(StartAllocation);
             _allocThread.IsBackground = true;
@@ -73,7 +73,7 @@ namespace RandomDataGenerator
             }
             finally
             {
-                AllocationCompleted = true;
+                _allocationCompleted = true;
             }
         }
 

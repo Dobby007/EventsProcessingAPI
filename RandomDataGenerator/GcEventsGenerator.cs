@@ -10,45 +10,44 @@ namespace RandomDataGenerator
 {
     class GcEventsGenerator : DataGenerator
     {
-        private readonly AutoResetEvent _gcEventsCatched = new AutoResetEvent(false);
         private readonly List<RealEvent> _allEvents = new List<RealEvent>();
         private volatile bool _extrapolationCompleted = false;
         
-        private readonly TimeSpan _interval;
-        private readonly AllocationMode _allocationMode;
+        private readonly GenerateOptions _options;
 
-        public GcEventsGenerator(string filename, TimeSpan interval, AllocationMode allocationMode)
-            : base(filename)
+        public GcEventsGenerator(GenerateOptions options)
+            : base(options.File)
         {
-            _interval = interval;
-            _allocationMode = allocationMode;
+            _options = options;
         }
 
-        public void GenerateFile(int desiredEventsCount)
+        public void GenerateFile()
         {
             using (var watcher = new GCNotificationWatcher())
             {
                 watcher.OnGarbageCollectionStarted += AddStartEvent;
                 watcher.OnGarbageCollectionEnded += AddStopEvent;
-                watcher.Start();
-
+               
                 
+                var process = AllocationManager.StartProcess(new AllocateOptions { AllocationMode = _options.AllocationMode, Duration = _options.Duration });
+                watcher.Start(process.Id);
 
                 var timer = new Timer(state =>
                 {
-                    heavyMetal.Stop();
-                    _gcEventsCatched.Set();
-                }, null, (long)_interval.TotalMilliseconds, Timeout.Infinite);
+                    _eventsBatchGenerated.Set();
+                }, null, (long)_options.Duration.TotalMilliseconds, Timeout.Infinite);
 
-                WriteFile(() => heavyMetal.IsRunning && !heavyMetal.AllocationCompleted, false);
+                WriteFile(() => !process.HasExited, false);
 
                 timer.Dispose();
             }
-
-            Console.WriteLine("\nExtrapolation started...");
-
-            StartDataExtrapolation(desiredEventsCount);
             
+            Console.WriteLine();
+
+            // watcher can add events to the queue after writting was completed
+            InitQueue();
+
+            StartDataExtrapolation(_options.DesiredEventsCount);
             WriteFile(() => !_extrapolationCompleted, true);
 
         }
@@ -62,7 +61,14 @@ namespace RandomDataGenerator
                 int totalEventsGenerated = 0;
                 long lastEventTime = _allEvents[_allEvents.Count - 1].Ticks;
                 desiredEventsCount -= _allEvents.Count;
-            
+
+                if (desiredEventsCount <= 0)
+                {
+                    _extrapolationCompleted = true;
+                    return;
+                }
+
+                Console.WriteLine("\nExtrapolation started...");
 
                 while (totalEventsGenerated < desiredEventsCount)
                 {
@@ -82,7 +88,7 @@ namespace RandomDataGenerator
                         totalEventsGenerated++;
                     }
 
-                    _gcEventsCatched.Set();
+                    _eventsBatchGenerated.Set();
                     
                     while (_queue.Count > 1000)
                         spinWait.SpinOnce();
@@ -95,24 +101,23 @@ namespace RandomDataGenerator
             thread.Start();
         }
 
-        private void AddStartEvent()
+        private void AddStartEvent(long ticks)
         {
-            var ticks = _ticker.Peek();
             var realEvent = new RealEvent(EventType.Start, ticks);
             
             _queue.Enqueue(realEvent);
             _allEvents.Add(realEvent);
         }
 
-        private void AddStopEvent()
+        private void AddStopEvent(long ticks)
         {
-            var ticks = _ticker.Peek();
             var realEvent = new RealEvent(EventType.Stop, ticks);
             
             _queue.Enqueue(realEvent);
             _allEvents.Add(realEvent);
-            if (_queue.Count >= 10)
-                _gcEventsCatched.Set();
+            var count = _queue.Count;
+            if (count >= 10 && count % 10 == 0)
+                _eventsBatchGenerated.Set();
         }
 
         
