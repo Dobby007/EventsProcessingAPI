@@ -116,7 +116,7 @@ namespace RandomDataGenerator
             _queue.Enqueue(realEvent);
             _allEvents.Add(realEvent);
             var count = _queue.Count;
-            if (count >= 10 && count % 10 == 0)
+            if (count >= 10)
                 _eventsBatchGenerated.Set();
         }
 
