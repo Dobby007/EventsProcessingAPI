@@ -17,7 +17,7 @@ namespace EventsChart.ChartData
     {
         private readonly BucketContainer _container;
 
-        public readonly double[] _targetBuffer;
+        private double[] _targetBuffer;
         private readonly List<Point> _points = new List<Point>();
 
         public double ChartHeight { get; set; }
