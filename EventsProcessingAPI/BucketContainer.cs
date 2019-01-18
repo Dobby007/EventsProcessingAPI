@@ -102,7 +102,17 @@ namespace EventsProcessingAPI
 
         public double[] GetDensities(long start, long end, long segmentSize)
         {
-            return DensityCalculator.GetDensities(this, start, end, segmentSize);
+            return DensityCalculationManager.GetDensities(this, start, end, segmentSize);
+        }
+
+        public Span<double> GetDensities(long start, long end, long segmentSize, double[] targetBuffer)
+        {
+            return DensityCalculationManager.GetDensities(this, start, end, segmentSize, ref targetBuffer);
+        }
+
+        public double[] CreateBufferForDensities()
+        {
+            return new double[ushort.MaxValue];
         }
 
         public Bucket[] GetBuckets(long start, long end)

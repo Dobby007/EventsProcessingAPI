@@ -16,8 +16,8 @@ namespace FunctionalTests.Fixtures
             if (File.Exists(FileName))
                 return;
 
-            var generator = new FakeDataGenerator(FileName);
-            generator.GenerateFile(1_000_000);
+            var generator = new FakeDataGenerator(FileName, 1_000_000);
+            generator.GenerateFile();
         }
     }
 }

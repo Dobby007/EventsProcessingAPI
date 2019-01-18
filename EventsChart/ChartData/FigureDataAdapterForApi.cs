@@ -17,11 +17,14 @@ namespace EventsChart.ChartData
     {
         private readonly BucketContainer _container;
         public readonly double _chartHeight;
+        public readonly double[] _targetBuffer;
+        private readonly List<Point> _points = new List<Point>();
 
-        public FigureDataAdapterForApi(BucketContainer container, double chartHeight)
+        public FigureDataAdapterForApi(BucketContainer container, double chartHeight, double[] targetBuffer)
         {
             _container = container;
             _chartHeight = chartHeight;
+            _targetBuffer = targetBuffer;
         }
 
         public IEnumerable<IFigure> GetFiguresToDraw(long offset, long width, SegmentSize segmentSize)
@@ -32,8 +35,8 @@ namespace EventsChart.ChartData
 
             if (segmentSize.RequestedValue > 1)
             {
-                double[] densities = _container.GetDensities(start, end, segmentSize.RequestedValue);
-                return GetFiguresFromDensities(densities);
+                Span<double> densities = _container.GetDensities(start, end, segmentSize.RequestedValue, _targetBuffer);
+                return GetFiguresFromDensities(_targetBuffer, 0, densities.Length);
             }
             else if (segmentSize.RequestedValue == 1)
             {
@@ -79,30 +82,30 @@ namespace EventsChart.ChartData
             return figures;
         }
 
-        private IEnumerable<IFigure> GetFiguresFromDensities(double[] densities)
+        private IEnumerable<IFigure> GetFiguresFromDensities(double[] buffer, int indexFrom, int length)
         {
             double currentValue = 0, prevValue = 0;
             Point startPoint = default;
             bool isNewFigure = true;
             FigureType figureType = FigureType.Unknown;
-
-            var points = new List<Point>(densities.Length + 5 /* с запасом */);
-            for (var i = 0; i < densities.Length; i++)
+            
+            
+            for (var i = indexFrom; i < length; i++)
             {
-                if (densities[i] < 0 || densities[i] > 1)
+                if (buffer[i] < 0 || buffer[i] > 1)
                     throw new ArithmeticException("Density must belong to the range [0; 1]");
 
-                currentValue = _chartHeight - (int)(densities[i] * _chartHeight);
+                currentValue = _chartHeight - (int)(buffer[i] * _chartHeight);
 
                 // if density ~ 0
                 if (currentValue == _chartHeight)
                 {
-                    SetFigureType(ref figureType, points);
-                    if (points.Count > 0)
+                    SetFigureType(ref figureType, _points);
+                    if (_points.Count > 0)
                     {
-                        points.Add(new Point(i - 1, currentValue));
-                        yield return CreateFigure(figureType, startPoint, points);
-                        points.Clear();
+                        _points.Add(new Point(i - 1, currentValue));
+                        yield return CreateFigure(figureType, startPoint, _points);
+                        _points.Clear();
                         isNewFigure = true;
                         figureType = FigureType.Unknown;
                     }
@@ -119,29 +122,30 @@ namespace EventsChart.ChartData
                 {
                     if (prevValue < currentValue)
                     {
-                        points.Add(new Point(i - 1, currentValue));
+                        _points.Add(new Point(i - 1, currentValue));
                         figureType = FigureType.Polyline;
                     }
                     else if (prevValue > currentValue)
                     {
-                        points.Add(new Point(i, prevValue));
+                        _points.Add(new Point(i, prevValue));
                         figureType = FigureType.Polyline;
                     }
                 }
-                points.Add(new Point(i, currentValue));
+                _points.Add(new Point(i, currentValue));
 
                 isNewFigure = false;
 
                 prevValue = currentValue;
             }
 
-            SetFigureType(ref figureType, points);
+            SetFigureType(ref figureType, _points);
 
-            if (points.Count > 0)
+            if (_points.Count > 0)
             {
-                points.Add(new Point(densities.Length - 1, _chartHeight));
-                yield return CreateFigure(figureType, startPoint, points);
+                _points.Add(new Point(buffer.Length - 1, _chartHeight));
+                yield return CreateFigure(figureType, startPoint, _points);
             }
+            _points.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

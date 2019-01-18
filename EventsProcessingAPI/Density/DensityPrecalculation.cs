@@ -54,7 +54,7 @@ namespace EventsProcessingAPI.Density
 
             if (isCompleted || lastEventAbsoluteTime - (GetStartTime(buckets, TimeUnit.Second) ?? firstEventAbsoluteTime) > segmentSize * 30)
             {
-                var densities = DensityCalculator.GetDensities(
+                var densities = DensityCalculationManager.GetDensities(
                     bucketsArray,
                     GetStartTime(buckets, TimeUnit.Second),
                     segmentSize,
@@ -68,7 +68,7 @@ namespace EventsProcessingAPI.Density
             segmentSize *= 60;
             if (isCompleted || lastEventAbsoluteTime - (GetStartTime(buckets, TimeUnit.Minute) ?? firstEventAbsoluteTime) > segmentSize)
             {
-                var densities = DensityCalculator.GetDensities(
+                var densities = DensityCalculationManager.GetDensities(
                     bucketsArray,
                     GetStartTime(buckets, TimeUnit.Minute),
                     segmentSize,

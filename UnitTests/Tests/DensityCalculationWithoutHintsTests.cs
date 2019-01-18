@@ -20,7 +20,7 @@ namespace UnitTests.Tests
         [Fact]
         public void AllDensitiesEqualOne()
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, 31 * Durations.Second, 35 * Durations.Second - 1, Durations.Second);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, 31 * Durations.Second, 35 * Durations.Second - 1, Durations.Second);
             Assert.NotEmpty(densities);
             Assert.All(densities, d => Assert.Equal(1, d));
         }
@@ -28,14 +28,14 @@ namespace UnitTests.Tests
         [Fact]
         public void NoDensities()
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, 255 * Durations.Second, 260 * Durations.Second - 1, Durations.Second);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, 255 * Durations.Second, 260 * Durations.Second - 1, Durations.Second);
             Assert.Empty(densities);
         }
 
         [Fact]
         public void LastDensityIsZero()
         {
-            var densities = DensityCalculator.GetDensities(
+            var densities = DensityCalculationManager.GetDensities(
                 _fixture.SampleEvents1, 
                 31 * Durations.Second, 
                 44 * Durations.Second,
@@ -54,7 +54,7 @@ namespace UnitTests.Tests
 
         public void CalculateDensityForOneSegment(long start, long end, long segmentSize, double expectedDensity)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
 
             Assert.Single(densities);
             Assert.DensitiesEqual(expectedDensity, densities[0]);
@@ -69,7 +69,7 @@ namespace UnitTests.Tests
         [InlineData(Durations.Second * 31, Durations.Second * 32, Durations.Second, 1)]
         public void CalculateDensityForRangeWithOneStartEvent(long start, long end, long segmentSize, double expectedDensity)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
 
             Assert.Single(densities);
             Assert.DensitiesEqual(expectedDensity, densities[0]);
@@ -80,7 +80,7 @@ namespace UnitTests.Tests
         [InlineData(210, 220, 10, 1)]
         public void CalculateDensityForRangeWithOneStopEvent(long start, long end, long segmentSize, double expectedDensity)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
 
             Assert.Single(densities);
             Assert.DensitiesEqual(expectedDensity, densities[0]);
@@ -91,7 +91,7 @@ namespace UnitTests.Tests
         [InlineData(310, 320, 10, 0)]
         public void CalculateDensityForRangeWithNoEvents(long start, long end, long segmentSize, double expectedDensity)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
 
             Assert.Single(densities);
             Assert.DensitiesEqual(expectedDensity, densities[0]);
@@ -103,7 +103,7 @@ namespace UnitTests.Tests
         [InlineData(Durations.Second * 31, Durations.Second * 43, Durations.Second, 1)]
         public void CalculateDensityForRangeWithStartAndStopEvents(long start, long end, long segmentSize, double expectedDensity)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
             Assert.All(densities, d => Assert.DensitiesEqual(expectedDensity, d));
         }
 
@@ -117,7 +117,7 @@ namespace UnitTests.Tests
         [InlineData(20, 220, 200, 1)]
         public void DensitiesCountShouldMatch(long start, long end, long segmentSize, int expectedDensitiesCount)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents1, start, end, segmentSize);
             Assert.Equal(densities.Length, expectedDensitiesCount);
         }
 
@@ -125,7 +125,7 @@ namespace UnitTests.Tests
         [InlineData(0, 20, Durations.CpuTick * 5, new[] { 1D, 0.4, 0.6, 0.6 })]
         public void CalculateDensitiesForSeveralSegments(long start, long end, long segmentSize, double[] expectedDensities)
         {
-            var densities = DensityCalculator.GetDensities(_fixture.SampleEvents2, start, end, segmentSize);
+            var densities = DensityCalculationManager.GetDensities(_fixture.SampleEvents2, start, end, segmentSize);
             
             Assert.Equal(densities.Length, expectedDensities.Length);
             for(var i = 0; i < densities.Length; i++)

@@ -18,8 +18,8 @@ namespace FunctionalTests.Fixtures
                 return;
             
             
-            var generator = new FakeDataGenerator(FileName);
-            generator.GenerateFile(100_000);
+            var generator = new FakeDataGenerator(FileName, 100_000);
+            generator.GenerateFile();
 
 
         }

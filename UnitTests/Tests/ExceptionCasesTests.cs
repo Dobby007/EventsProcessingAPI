@@ -23,7 +23,7 @@ namespace UnitTests.Tests
         public void ShouldThrowExceptionWhenTooMuchSegments(long start, long end, long segmentSize)
         {
             Assert.Throws<ArgumentException>(() => {
-                DensityCalculator.GetDensities(
+                DensityCalculationManager.GetDensities(
                     _fixture.SampleEvents1,
                     start,
                     end,
@@ -35,7 +35,7 @@ namespace UnitTests.Tests
         public void ShouldThrowExceptionWhenEndIsLessThanStart()
         {
             Assert.Throws<ArgumentException>(() => {
-                DensityCalculator.GetDensities(
+                DensityCalculationManager.GetDensities(
                     _fixture.SampleEvents1,
                     24 * Durations.Second,
                     24 * Durations.Second - 1,
@@ -47,7 +47,7 @@ namespace UnitTests.Tests
         public void ShouldThrowExceptionWhenEndEqualsStart()
         {
             Assert.Throws<ArgumentException>(() => {
-                DensityCalculator.GetDensities(
+                DensityCalculationManager.GetDensities(
                     _fixture.SampleEvents1,
                     24 * Durations.Second,
                     24 * Durations.Second,
@@ -59,7 +59,7 @@ namespace UnitTests.Tests
         public void ShouldThrowWhenSegmentSizeIsTooBig()
         {
             Assert.Throws<ArgumentException>(() => {
-                DensityCalculator.GetDensities(
+                DensityCalculationManager.GetDensities(
                     _fixture.SampleEvents1,
                     24 * Durations.Second,
                     24 * Durations.Second + 1000,

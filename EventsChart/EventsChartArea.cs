@@ -21,6 +21,7 @@ namespace EventsChart
         public Canvas WrappingCanvas { get; }
         private readonly ChartUpdater _chartUpdater;
         private IFigureDataAdapter _figureDataAdapter;
+        private double[] _targetBufferForDensities;
         private Tooltip _tooltip;
         private long _firstTimestamp;
 
@@ -44,6 +45,7 @@ namespace EventsChart
             MouseLeave += EventsChartArea_MouseLeave;
             SizeChanged += OnSizeChanged;
             Loaded += OnLoaded;
+            
         }
 
         
@@ -116,6 +118,7 @@ namespace EventsChart
             var wpfChart = obj as EventsChartArea;
             if (wpfChart == null) return;
             wpfChart._firstTimestamp = ((BucketContainer)args.NewValue).FirstTimestamp;
+            wpfChart._targetBufferForDensities = ((BucketContainer)args.NewValue).CreateBufferForDensities();
             wpfChart.UpdateChart();
         }
 
@@ -146,7 +149,7 @@ namespace EventsChart
 
         private void UpdateAreaSize()
         {
-            _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, ActualHeight);
+            _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, ActualHeight, _targetBufferForDensities);
             Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
 
             Canvas.SetLeft(Canvas, 0);
@@ -167,7 +170,7 @@ namespace EventsChart
 
         private static PropertyChangedCallback GetChartUpdater()
         {
-            return async (o, args) =>
+            return (o, args) =>
             {
                 var wpfChart = o as EventsChartArea;
                 if (wpfChart == null) return;
