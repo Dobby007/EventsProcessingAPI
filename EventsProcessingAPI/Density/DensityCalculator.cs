@@ -125,9 +125,8 @@ namespace EventsProcessingAPI.Density
                 targetBuffer[segmentIndex++] = CalculateDensity(ref filled, ref unfilled, lastEventType, ref distance, request.SegmentSize);
 
                 // we need to set densities for segments that we didn't processed due to the lack of the events
-                if (lastEventType == EventType.Start)
-                    for (; segmentIndex < targetBuffer.Length; segmentIndex++)
-                        targetBuffer[segmentIndex] = 1;
+                for (; segmentIndex < targetBuffer.Length; segmentIndex++)
+                    targetBuffer[segmentIndex] = lastEventType == EventType.Start ? 1 : 0;
 
                 processedRange = request.End - request.Start;
             }

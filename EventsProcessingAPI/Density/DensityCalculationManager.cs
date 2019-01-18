@@ -67,7 +67,6 @@ namespace EventsProcessingAPI.Density
                 targetBuffer = new double[totalSegments];
             else if (targetBuffer.Length < totalSegments)
                 throw new ArgumentException("Target buffer is too short", nameof(targetBuffer));
-            
 
             int processedSegmentsUsingHints = -1;
             try
