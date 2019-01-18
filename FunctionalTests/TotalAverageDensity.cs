@@ -63,7 +63,7 @@ namespace FunctionalTests
                 density1, 
                 density2);
 
-            Assert.Equal(density2, density1, 5);
+            Assert.Equal(density2, density1, 4);
         }
 
         static double CalculateAverageDensityBySimpleMethod(string filePath, long start, long end)

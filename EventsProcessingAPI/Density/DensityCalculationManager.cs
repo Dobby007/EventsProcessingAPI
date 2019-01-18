@@ -25,7 +25,7 @@ namespace EventsProcessingAPI.Density
         {
             double[] densities = null;
             GetDensities(container, start, end, segmentSize, targetBuffer: ref densities);
-            return densities;
+            return densities ?? Array.Empty<double>();
         }
 
         /// <summary>
