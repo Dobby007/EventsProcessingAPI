@@ -1,4 +1,5 @@
 ﻿using EventsChart.ChartData;
+using EventsProcessingAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,25 +27,27 @@ namespace EventsChart.Rendering
 
         public void Run()
         {          
-            var segmentSize = _chartArea.SegmentSize;
-            var offset = _chartArea.Offset;
-            var width = _chartArea.Width;
+            SegmentSize segmentSize = _chartArea.SegmentSize;
+            long offset = _chartArea.Offset;
+            int width = _chartArea.Width;
+            int height = _chartArea.Height;
 
             var dataAdapter = _dataAdapterFactory.Get();
             if (dataAdapter == null)
                 return;
 
             double translateX = 0;
-            if (_lastRenderingRequest.Covers(offset, segmentSize, width))
+            if (_lastRenderingRequest.Covers(offset, segmentSize, width, height))
             {
                 translateX = (offset - _lastRenderingRequest.Offset) / (double)-segmentSize.DisplayedValue;
             }
             else
             {
+                // TODO: Определять буферную зону динамически в зависимости от текущего масштаба и расстоянием между начальным и конечным событием
                 long bufferedOffset = Math.Max(0, offset - segmentSize.DisplayedValue * 2 * width);
-                translateX = (bufferedOffset - offset) / (double)segmentSize.DisplayedValue;
+                var request = new RenderingRequest(bufferedOffset, segmentSize, width * 5, height);
 
-                var request = new RenderingRequest(bufferedOffset, segmentSize, width * 5);
+                translateX = (bufferedOffset - offset) / (double)segmentSize.DisplayedValue;
 
                 var figures = dataAdapter.GetFiguresToDraw(
                     request.Offset,

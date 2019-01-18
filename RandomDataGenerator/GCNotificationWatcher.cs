@@ -19,8 +19,9 @@ namespace RandomDataGenerator
         public event Action<long> OnGarbageCollectionStarted;
         public event Action<long> OnGarbageCollectionEnded;
         private int _targetProcessId = -1;
+        private long _sessionStartTime = 0;
 
-        public void Start(int targetProcessId)
+        public void Start(int targetProcessId, long sessionStartTime)
         {
             if (disposedValue)
                 throw new ObjectDisposedException(nameof(GCNotificationWatcher));
@@ -28,6 +29,7 @@ namespace RandomDataGenerator
                 return;
 
             _targetProcessId = targetProcessId;
+            _sessionStartTime = sessionStartTime;
             _isStarted = true;
             _watcherThread = new Thread(WatchForGC);
             _watcherThread.IsBackground = true;
@@ -56,13 +58,13 @@ namespace RandomDataGenerator
         private void Clr_GCRestartEEStop(GCNoUserDataTraceData obj)
         {
             if (_targetProcessId == obj.ProcessID)
-                OnGarbageCollectionEnded?.Invoke((long)(obj.TimeStampRelativeMSec * 10_000));
+                OnGarbageCollectionEnded?.Invoke(_sessionStartTime + (long)(obj.TimeStampRelativeMSec * 10_000));
         }
 
         private void Clr_GCSuspendEEStop(GCNoUserDataTraceData obj)
         {
             if (_targetProcessId == obj.ProcessID)
-                OnGarbageCollectionStarted?.Invoke((long)(obj.TimeStampRelativeMSec * 10_000));
+                OnGarbageCollectionStarted?.Invoke(_sessionStartTime + (long)(obj.TimeStampRelativeMSec * 10_000));
         }
 
         #region IDisposable Support

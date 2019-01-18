@@ -14,7 +14,7 @@ namespace EventsDomain
         public readonly long Offset;
         public readonly Event[] Events;
         public readonly Payload[] Payloads;
-        public double Density;
+
         public bool NoPayloadsLoaded => Payloads == null;
 
         public long StartTime => MaxBucketEventTime * Offset;

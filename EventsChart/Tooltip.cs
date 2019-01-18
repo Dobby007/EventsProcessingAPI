@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using HorizontalAlignment = System.Windows.HorizontalAlignment;
-using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace EventsChart
 {
@@ -42,7 +41,7 @@ namespace EventsChart
             _tooltipCanvas.Children.Add(new Rectangle() {
                 Height = TooltipHeight,
                 Width = TooltipWidth,
-                Opacity = 0.5,
+                Opacity = 0.75,
                 Fill = Brushes.Snow
             });
             _tooltipCanvas.Children.Add(_currentTimeInfo);
@@ -82,7 +81,7 @@ namespace EventsChart
             _canvas.Height = _chartArea.Height;
             _marker.Y2 = _chartArea.Height;
 
-            var currentTime = TimeSpan.FromTicks((long)(_chartArea.SegmentSize.DisplayedValue * x + 0));
+            var currentTime = TimeSpan.FromTicks((long)(_chartArea.SegmentSize.DisplayedValue * x) + _chartArea.Offset);
             _currentTimeInfo.Content = $"Time: {currentTime}\nEvent count: {eventsCount}";
             
         }

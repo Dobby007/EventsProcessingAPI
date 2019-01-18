@@ -105,7 +105,7 @@ namespace EventsProcessingAPI
             return DensityCalculationManager.GetDensities(this, start, end, segmentSize);
         }
 
-        public Span<double> GetDensities(long start, long end, long segmentSize, double[] targetBuffer)
+        public Span<double> GetDensities(long start, long end, long segmentSize, ref double[] targetBuffer)
         {
             return DensityCalculationManager.GetDensities(this, start, end, segmentSize, ref targetBuffer);
         }

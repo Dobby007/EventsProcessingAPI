@@ -23,9 +23,18 @@ namespace RandomDataGenerator
         public TimeSpan Duration { get; set; }
 
         [Option('m', "mode", Required = false, HelpText = "Specifies the mode for test allocations. Allowed values: hard, light. Permitted only for non-fake mode.")]
-        public AllocationMode AllocationMode { get; set; }
+        public string AllocationModeRaw { get; set; }
 
         [Option('n', Required = false, HelpText = "Specifies desired number of events that should be written to the file. In non-fake mode extrapollation will be done if there are not enough events catched.")]
         public int DesiredEventsCount { get; set; }
+        public AllocationMode AllocationMode
+        {
+            get
+            {
+                if (Enum.TryParse(AllocationModeRaw, true, out AllocationMode parsed))
+                    return parsed;
+                return default;
+            }
+        }
     }
 }

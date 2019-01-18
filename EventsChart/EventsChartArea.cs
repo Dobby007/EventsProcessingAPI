@@ -41,6 +41,7 @@ namespace EventsChart
             _tooltip = new Tooltip(this);
             AddUiElement(_tooltip);
 
+            Background = Brushes.White;
             MouseMove += EventsChartArea_MouseMove;
             MouseLeave += EventsChartArea_MouseLeave;
             SizeChanged += OnSizeChanged;
@@ -100,7 +101,6 @@ namespace EventsChart
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             UpdateAreaSize();
-            
             UpdateChart();
         }
 
@@ -115,11 +115,12 @@ namespace EventsChart
 
         private static void OnBucketContainerChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            var wpfChart = obj as EventsChartArea;
-            if (wpfChart == null) return;
-            wpfChart._firstTimestamp = ((BucketContainer)args.NewValue).FirstTimestamp;
-            wpfChart._targetBufferForDensities = ((BucketContainer)args.NewValue).CreateBufferForDensities();
-            wpfChart.UpdateChart();
+            if (obj is EventsChartArea wpfChart)
+            {
+                wpfChart.InitializeChartArea();
+                wpfChart.UpdateChart();
+            }
+            
         }
 
         private void EventsChartArea_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
@@ -149,13 +150,20 @@ namespace EventsChart
 
         private void UpdateAreaSize()
         {
-            _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, ActualHeight, _targetBufferForDensities);
+            _figureDataAdapter.ChartHeight = ActualHeight;
             Clip = new RectangleGeometry(new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
 
             Canvas.SetLeft(Canvas, 0);
             Canvas.SetTop(Canvas, 0);
             Canvas.Width = ActualWidth;
             Canvas.Height = ActualHeight;
+        }
+
+        private void InitializeChartArea()
+        {
+            _targetBufferForDensities = BucketContainer.CreateBufferForDensities();
+            _firstTimestamp = BucketContainer.FirstTimestamp;
+            _figureDataAdapter = new FigureDataAdapterForApi(BucketContainer, _targetBufferForDensities);
         }
 
         public void AddUiElement(FrameworkElement element)

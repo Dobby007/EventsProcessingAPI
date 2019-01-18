@@ -29,8 +29,8 @@ namespace RandomDataGenerator
                 watcher.OnGarbageCollectionEnded += AddStopEvent;
                
                 
-                var process = AllocationManager.StartProcess(new AllocateOptions { AllocationMode = _options.AllocationMode, Duration = _options.Duration });
-                watcher.Start(process.Id);
+                var process = AllocationManager.StartProcess(new AllocateOptions { AllocationModeRaw = _options.AllocationModeRaw, Duration = _options.Duration });
+                watcher.Start(process.Id, _ticker.Peek());
 
                 var timer = new Timer(state =>
                 {

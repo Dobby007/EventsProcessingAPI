@@ -39,7 +39,7 @@ namespace RandomDataGenerator
         
         private static int StartAllocation(AllocateOptions options)
         {
-            Console.WriteLine($"Allocation started: duration = {options.Duration}, duration = {options.AllocationMode}");
+            Console.WriteLine($"Allocation started: duration = {options.Duration}, mode = {options.AllocationMode}");
             var spinWait = new SpinWait();
             var heavyMetal = new ObjectAllocator(options.AllocationMode);
             heavyMetal.Start();
@@ -71,7 +71,7 @@ namespace RandomDataGenerator
                 generator.GenerateFile();
             }
 
-            Console.WriteLine("Generation ended");
+            Console.WriteLine("\nGeneration ended");
             return 0;
         }
     }

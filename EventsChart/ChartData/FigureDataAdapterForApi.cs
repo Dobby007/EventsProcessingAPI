@@ -16,26 +16,30 @@ namespace EventsChart.ChartData
     class FigureDataAdapterForApi : IFigureDataAdapter
     {
         private readonly BucketContainer _container;
-        public readonly double _chartHeight;
+
         public readonly double[] _targetBuffer;
         private readonly List<Point> _points = new List<Point>();
 
-        public FigureDataAdapterForApi(BucketContainer container, double chartHeight, double[] targetBuffer)
+        public double ChartHeight { get; set; }
+
+        public FigureDataAdapterForApi(BucketContainer container, double[] targetBuffer)
         {
             _container = container;
-            _chartHeight = chartHeight;
             _targetBuffer = targetBuffer;
         }
 
         public IEnumerable<IFigure> GetFiguresToDraw(long offset, long width, SegmentSize segmentSize)
         {
+            if (ChartHeight <= 0)
+                return Enumerable.Empty<IFigure>();
+
             long firstTimestamp = _container.FirstTimestamp;
             long start = firstTimestamp + offset;
             long end = firstTimestamp + offset + width * segmentSize.DisplayedValue;
 
             if (segmentSize.RequestedValue > 1)
             {
-                Span<double> densities = _container.GetDensities(start, end, segmentSize.RequestedValue, _targetBuffer);
+                Span<double> densities = _container.GetDensities(start, end, segmentSize.RequestedValue, ref _targetBuffer);
                 return GetFiguresFromDensities(_targetBuffer, 0, densities.Length);
             }
             else if (segmentSize.RequestedValue == 1)
@@ -66,7 +70,7 @@ namespace EventsChart.ChartData
                             startEventTime = startTimestamp;
 
                         duration = ev.Ticks - startEventTime;
-                        figures.Add(CreateFigure(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight));
+                        figures.Add(CreateFigure(Math.Max(startEventTime - startTimestamp, 0), 0, duration, ChartHeight));
                         startEventTime = -1;
                         break;
                 }
@@ -76,7 +80,7 @@ namespace EventsChart.ChartData
             if (startEventTime >= 0)
             {
                 duration = endTimestamp - startEventTime;
-                figures.Add(CreateFigure(Math.Max(startEventTime - startTimestamp, 0), 0, duration, _chartHeight));
+                figures.Add(CreateFigure(Math.Max(startEventTime - startTimestamp, 0), 0, duration, ChartHeight));
             }
 
             return figures;
@@ -95,16 +99,16 @@ namespace EventsChart.ChartData
                 if (buffer[i] < 0 || buffer[i] > 1)
                     throw new ArithmeticException("Density must belong to the range [0; 1]");
 
-                currentValue = _chartHeight - (int)(buffer[i] * _chartHeight);
+                currentValue = ChartHeight - (int)(buffer[i] * ChartHeight);
 
                 // if density ~ 0
-                if (currentValue == _chartHeight)
+                if (currentValue == ChartHeight)
                 {
                     SetFigureType(ref figureType, _points);
                     if (_points.Count > 0)
                     {
                         _points.Add(new Point(i - 1, currentValue));
-                        yield return CreateFigure(figureType, startPoint, _points);
+                        yield return CreateFigure(figureType, startPoint, _points.ToArray());
                         _points.Clear();
                         isNewFigure = true;
                         figureType = FigureType.Unknown;
@@ -115,7 +119,7 @@ namespace EventsChart.ChartData
 
                 if (isNewFigure)
                 {
-                    startPoint = new Point(i, _chartHeight);
+                    startPoint = new Point(i, ChartHeight);
                 }
 
                 if (!isNewFigure)
@@ -142,8 +146,8 @@ namespace EventsChart.ChartData
 
             if (_points.Count > 0)
             {
-                _points.Add(new Point(buffer.Length - 1, _chartHeight));
-                yield return CreateFigure(figureType, startPoint, _points);
+                _points.Add(new Point(buffer.Length - 1, ChartHeight));
+                yield return CreateFigure(figureType, startPoint, _points.ToArray());
             }
             _points.Clear();
         }
